@@ -1,0 +1,35 @@
+services:
+  voice:
+    image: project-voice
+    container_name: voice
+    networks:
+      voice_bridge:
+        ipv4_address: 192.168.88.2
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_BASE_URL=http://192.168.88.3:11434/v1
+      - OPENAI_API_KEY=ollama
+    restart: unless-stopped
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    networks:
+      voice_bridge:
+        ipv4_address: 192.168.88.3
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+networks:
+  voice_bridge:
+    driver: bridge
+    name: voice_bridge
+    ipam:
+      config:
+        - subnet: 192.168.88.0/24
+volumes:
+  ollama_data:
+    name: ollama
+    driver: local
