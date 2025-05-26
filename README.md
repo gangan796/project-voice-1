@@ -8,58 +8,143 @@ This software uses generative AI to predict possible words and sentences that mi
 
 <!--- TODO: Add a link to the external promotion page. -->
 
-## Before you begin
+## Local Deployment
 
-Project VOICE is a web application built on Gemini API, and it’s designed to be run on Google App Engine primarily. Please set up a Google Cloud project with these APIs enabled. You will also need to install Python and Node.js to build and run the application.
+Ensure you have configured SSH key to development Project VOICE in github (see
+[here](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)).
 
-1. In the Google Cloud console, on the project selector page, select or create a Google Cloud project.\
-    [Go to project selector](https://console.cloud.google.com/projectselector2/home/dashboard)
-1. Make sure that billing is enabled for your Google Cloud project. See [this page](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project) for details.
-1. Enable Gemini API.\
-    [Gemini API](https://console.cloud.google.com/flows/enableapi?apiid=generativelanguage.googleapis.com)
-1. [Install](https://cloud.google.com/sdk/docs/install) the Google Cloud CLI.
-1. To initialize the gcloud CLI, run the following command:
-    ```
-    gcloud init
-    ```
-1. Run the following commands to configure the project and Application Default Credentials:
-    ```
-    gcloud auth login
-    ```
-    ```
-    gcloud config set project <YOUR_PROJECT_ID>
-    ```
-1. If you wish to change the Google Cloud project for billing and quota, run:
-    ```
-    gcloud auth application-default set-quota-project <YOUR_PROJECT_ID>
-    ```
-1. Install Python 3.n if you haven’t.
-1. Install [Node.js](https://nodejs.org/) if you haven’t.
+```shell
+$ git clone git@github.com:zesonzhang/project-voice.git
+$ cd project-voice
+```
 
-## Development
+### Build
 
-1. Run `git clone <this repo>`.
-1. Install libraries by running `npm i`.
-1. Set the `API_KEY` environment variable for the Gemini API access.
-    ```
-    export API_KEY=YOUR_API_KEY
-    ```
-1. Run the local development server by running `npm run dev`. This will start a local demo at http://localhost:5000/.
+You can choose either run directly on your Linux machine or run inside docker.
 
-## Deployment
+#### Run on host machine directly
 
-This app is designed to be deployed to Google App Engine primarily.
-Keep the following in mind when you deploy the app to your own Google Cloud project.
+1.  Install packages needed
 
-1. In your `app.yaml` file, set the following environment variables.
-    - `API_KEY`: Your API key for the Gemini API.
-    - `SECRET_KEY`: A unique, secret string used for CSRF validation.
     ```
-    env_variables:
-        API_KEY: "YOUR_API_KEY"
-        SECRET_KEY: "YOUR_OWN_VALUE"
+    $ sudo apt-get install -y nodejs python3 python3-pip python3-venv
     ```
-1. Run `npm run deploy`.
+
+2.  Set up Python venv
+
+    ```shell
+    $ cd project-voice
+    $ python3 -m venv .venv
+    $ source .venv/bin/activate
+    ```
+
+3.  Set up node.js environment and install python packages
+
+    ```
+    $(.venv) npm install && npm run build
+    ```
+
+4.  Run server
+
+    ```shell
+    $(.venv) python3 main.py
+    ```
+
+#### Run inside docker
+
+With the help of docker, the container has packaged all the environment needed
+to run the Project VOICE. You can quick run a demo or develop the project by
+running a docker container.
+
+**Note: Please ensure you have docker successfully installed.**
+
+1. Build project-voice docker image
+
+    *Note: It may take several minutes to build a docker image, depending on your network status.*
+
+    ```shell
+    $ docker build -f docker/Dockerfile -t project-voice .
+    ```
+
+2. Start a container
+
+    a. Interaction Mode
+
+    ```shell
+    $ docker run -i -t --rm -p 5000:5000 --name voice project-voice
+    ```
+    
+    - You can see the logs in console directly, use Ctrl + C to exit.
+
+    b. Detached Mode
+
+    ```shell
+    $ docker run -d --rm -p 5000:5000 --name voice project-voice
+    ```
+    
+    -   use `docker stop voice` to exit
+    -   use `docker logs -f voice` to check logs
+
+### Access web page
+
+You should be able to see the content by opening http://localhost:5000. But the
+access of LLM API is not configured yet in this guide. See below on how to access local LLM.
+
+## Run with local LLM
+
+The following guide shows how to use docker to run project-voice together with
+ollama to make project-voice have accessibility of local LLM.
+
+1.  Setup a new docker network bridge (only once)
+
+    This is used for the network communication between project-voice and ollama
+
+    ```shell
+    $ docker network create --subnet=192.168.88.0/24 voice_bridge
+    ```
+
+2.  Run ollama
+
+    ```shell
+    $ docker run -d --name ollama \
+      --network=voice_bridge --ip=192.168.88.3 -p 11434:11434 \
+      -v ollama:/root/.ollama \
+      ollama/ollama
+    ```
+
+3.  Download model file (only once)
+
+    Use this only after ollama container is running.
+
+    ```shell
+    $ docker exec -it ollama ollama pull gemma3:4b
+    ```
+
+4.  Run project-voice
+
+    ```shell
+    $ docker run -it --rm --name voice \
+      --network=voice_bridge --ip=192.168.88.2 -p 5000:5000 \
+      -e OPENAI_BASE_URL="http://192.168.88.3:11434/v1" \
+      -e OPENAI_API_KEY="ollama" \
+      project-voice
+    ```
+
+5.  Open http://localhost:5000 on your host machine, and have a try!
+
+## Experimental: use docker-compose to run with local LLM
+
+Install docker-compose if you haven't
+
+```shell
+$ sudo apt-get install docker-compose
+```
+
+Then, use this single command to run project-voice and ollama.
+
+```
+docker compose -f docker/docker-compose.yml up
+```
 
 ## Storybook
 
