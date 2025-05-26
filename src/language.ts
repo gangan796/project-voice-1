@@ -152,31 +152,14 @@ class EnglishWithSingleRowKeyboard extends English {
   }
 }
 
-class EnglishWithQWERYKeyboard extends English {
-  keyboards = [literal`pv-qwerty-keyboard`];
-  override render() {
-    return html`${msg('English (QWERTY keyboard)')}`;
-  }
-}
 
-abstract class Japanese implements Language {
-  code = 'ja-JP';
-  promptName = 'Japanese';
+abstract class Chinese implements Language {
+  code = 'zh-CN';
+  promptName = 'Chinese';
   keyboards: StaticValue[] = [];
-  initialPhrases = [
-    'はい',
-    'いいえ',
-    'ありがとう',
-    'すみません',
-    'お願いします',
-    '私',
-    'あなた',
-    '彼',
-    '彼女',
-    '今日',
-    '昨日',
-    '明日',
-  ];
+  separetor = '';
+  initialPhrases = ['你', '我', '他', '她', '它', '好', '今天', '昨天', '明天'];
+  emotions: string[] = [];
   aiConfigs = {
     classic: {
       model: 'gemma3:4b',
@@ -194,137 +177,35 @@ abstract class Japanese implements Language {
       word: 'WordGeneric20240628',
     },
   };
-
   abstract render(): TemplateResult;
-
-  private tinySegmenter = window.TinySegmenter
-    ? new window.TinySegmenter()
-    : null;
   segment(sentence: string) {
-    if (!this.tinySegmenter) {
-      return [sentence];
+    let result = [];
+    for (let i = 0; i < sentence.length; i++) {
+      result.push(sentence[i]);
     }
-    return this.tinySegmenter?.segment(sentence);
+    return result;
   }
-
   join(words: string[]) {
     return words.join('');
   }
-
   appendWord(text: string, word: string) {
+    // Remove pinyin part if any.
+    // TODO: This is way too hacky. Please use a more reliable way.
+    text = text.replace(/[a-z]+$/, '');
     if (word.startsWith('-')) {
       return text + word.slice(1);
     }
     return text + word;
   }
 }
-
-class JapaneseWithSingleRowKeyboard extends Japanese {
-  keyboards = [
-    literal`pv-hiragana-single-row-keyboard`,
-    literal`pv-alphanumeric-single-row-keyboard`,
-  ];
+class ChineseWithSingleRowKeyboard extends Chinese {
+  keyboards = [literal`pv-alphanumeric-single-row-keyboard`];
   render() {
-    return html`${msg('Japanese (single-row keyboard)')}`;
-  }
-}
-
-class JapaneseWithFullKeyboard extends Japanese {
-  keyboards = [literal`pv-fifty-key-keyboard`, literal`pv-qwerty-keyboard`];
-  render() {
-    return html`${msg('Japanese (Gojūon keyboard)')}`;
-  }
-}
-
-abstract class French extends LatinScriptLanguage {
-  code = 'fr-FR';
-  promptName = 'French';
-  // TODO: Revise default initial phrases.
-  initialPhrases = [
-    'Je',
-    'Tu',
-    'Ils',
-    'Que',
-    'Pourquoi',
-    'Quand',
-    'Où',
-    'Quelle',
-    'Qui',
-    'Peux-tu',
-    'Pourrais-tu',
-    'Ferais-tu',
-    'Fais-tu',
-  ];
-}
-
-class FrenchExperimental extends French {
-  keyboards = [literal`pv-french-single-row-keyboard`];
-  override render() {
-    return html`${msg('French (experimental)')}`;
-  }
-}
-
-abstract class German extends LatinScriptLanguage {
-  code = 'de-DE';
-  promptName = 'German';
-  // TODO: Revise default initial phrases.
-  initialPhrases = [
-    'Ich',
-    'Du',
-    'Sie',
-    'Was',
-    'Warum',
-    'Wann',
-    'Wo',
-    'Wie',
-    'Wer',
-    'Kannst',
-    'Könntest du',
-    'Würdest du',
-    'Tust du',
-  ];
-}
-
-class GermanExperimental extends German {
-  keyboards = [literal`pv-german-single-row-keyboard`];
-  override render() {
-    return html`${msg('German (experimental)')}`;
-  }
-}
-
-abstract class Swedish extends LatinScriptLanguage {
-  code = 'sv-SE';
-  promptName = 'Swedish';
-  initialPhrases = [
-    'Jag',
-    'Du',
-    'De',
-    'Vad',
-    'Varför',
-    'När',
-    'Var',
-    'Hur',
-    'Vem',
-    'Burk',
-    'Kan',
-    'Skulle du',
-    'Gör du',
-  ];
-}
-
-class SwedishExperimental extends Swedish {
-  keyboards = [literal`pv-swedish-single-row-keyboard`];
-  override render() {
-    return html`${msg('Swedish (experimental)')}`;
+    return html`${msg('Chinese (single-row keyboard)')}`;
   }
 }
 
 export const LANGUAGES: {[name: string]: Language} = {
   englishWithSingleRowKeyboard: new EnglishWithSingleRowKeyboard(),
-  englishWithQWERYKeyboard: new EnglishWithQWERYKeyboard(),
-  japaneseWithSingleRowKeyboard: new JapaneseWithSingleRowKeyboard(),
-  japaneseWithFullkeyboard: new JapaneseWithFullKeyboard(),
-  frenchExperimental: new FrenchExperimental(),
-  germanExperimental: new GermanExperimental(),
-  swedishExperimental: new SwedishExperimental(),
+  chineseWithSingleRowKeyboard: new ChineseWithSingleRowKeyboard(),
 };

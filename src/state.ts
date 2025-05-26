@@ -34,7 +34,7 @@ class State {
   // for this app. For now, we use hand wrtten getters / setters for accessing
   // state.
 
-  private langSignal = signal(LANGUAGES['japaneseWithSingleRowKeyboard']);
+  private langSignal = signal(LANGUAGES['chineseWithSingleRowKeyboard']);
 
   get lang() {
     return this.langSignal.get();

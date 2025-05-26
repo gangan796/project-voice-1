@@ -25,68 +25,6 @@ from google.generativeai.generative_models import GenerativeModel, safety_types
 import openai
 
 TEMPLATES = {
-    'SentenceJapaneseLong20241002':
-        textwrap.dedent('''\
-        あなたは利用者の言わんとしようとしていることを補助する役割を担います。利用者が入力する短いテキストから続く文章(句点「。」、感嘆符「！」、疑問符「？」のいずれかで終わるもの)を作成してください。「[[text]]」で始まる[[num]]つの異なる文を推測してリストを作成してください。実際に言いそう、有り得そうな文章のトップ[[num]]を生成してください。肯定文、疑問文（依頼含む）、否定文が混在していると理想です。想定を含めた場合も[[num]]つ以上の回答は不要です。あなたの出力はそのままユーザーの入力内容として使用されるので、出力には余分な補足や説明は一切含めないでください。
-
-        以下ルールです。
-        - 各回答はインデックス番号で始まる必要があります。
-        - 「[[text]]」は入力途中である場合もあります。1文字から2文字補完したうえでの想定も加えてください。名前など、固有名詞であるケースも想定してください。
-        - 「[[text]]」の文章は通常漢字やカタカナで書かれるものが、ひらがなのままなケースもあります。「漢字、あるいはカタカナで書いてあれば」という想定もしてください。漢字であることを想定して作成した回答では、回答内の表示も想定した漢字で表記してください。その際どう想定したか、という補足や読みの説明は不要です。
-        - 「[[text]]」に続く最初の単語、または助詞は回答ごとに極力異なるものにしてください。
-        - 「[[text]]」には入力ミスが含まれている可能性もありますが、「[[text]]」に続く一般的な文章が思いつかない場合にのみ、入力ミスを想定したうえで提案してください。
-        #ifdef persona
-
-        参考までに、このユーザのプロフィールは以下のとおりです:
-        [[persona]]
-        #endif
-        #ifdef conversationHistory
-
-        以下はユーザとその相手との会話の履歴です:
-        [[conversationHistory]]
-        #endif
-
-        回答:
-        '''),
-    'SentenceJapaneseLong20250424':
-        textwrap.dedent('''\
-        あなたはALSやSMAや脳機能障害などでコミュニケーションに困難を抱えるユーザーの会話を支援するボットです。ユーザーが入力中の「[[text]]」で始まる文（読点”。”や感嘆符”！”、”？”で終わるもの）を[[num]]つ推測して番号付きのリストにしてください。あなたの出力はそのままユーザーに選択肢として表示されるので、出力には余分な補足や説明、スペース（空白）は一切含めないでください。
-
-        以下ルールです。
-        - 各文章はなるべく異なる内容にしてください。
-        - 「[[text]]」は入力途中の場合もあります。単語で終わっていない場合は文字の補足もしたうえで、続きうる文章を作ってください。名前など、固有名詞であるケースも想定してください。
-        - 「[[text]]」の文章は通常漢字やカタカナで書かれるものが、ひらがなのままなケースもあります。「漢字、あるいはカタカナで書いてあれば」という想定もしてください。漢字であることを想定して作成した回答では、回答内の表示も想定した漢字で表記してください。その際どう想定したか、という補足や読みの説明は不要です。
-        - 「[[text]]」に続く最初の単語、または助詞は回答ごとに極力異なるものにしてください。ただし、あまりにマイナーな語彙は特に指示のない限り避けてください。
-        - 「[[text]]」には不要な句読点やスペース、漢字の読み方（）の注釈などは含めないでください。
-        #ifdef persona
-
-        参考までに、このユーザのプロフィールは以下のとおりです:
-        [[persona]]
-        #endif
-        #ifdef conversationHistory
-
-        以下はユーザとその相手との会話の履歴です:
-        [[conversationHistory]]
-        #endif
-
-        回答:
-        '''),
-    'SentenceJapanese20240628':
-        textwrap.dedent('''\
-        「[[text]]」で始まる[[num]]つの異なる文を推測してリストを作成してください。各回答はインデックス番号で始まる必要があります。それらの文は同じであってはなりません。文中の単語が間違っている可能性もあるため、できるだけ正確に推測してください。回答を強調表示しないでください。
-        #ifdef persona
-
-        参考までに、このユーザのプロフィールは以下のとおりです:
-        [[persona]]
-        #endif
-        #ifdef conversationHistory
-
-        以下はユーザとその相手との会話の履歴です:
-        [[conversationHistory]]
-        #endif
-
-        回答:
-        '''),
     'SentenceGeneric20250311':
         textwrap.dedent(
             '''\
@@ -160,6 +98,90 @@ TEMPLATES = {
         2. am
         3. -talian
 
+        sentence: "[[text]]"
+        answers:
+        '''),
+    'WordChinese20250326':
+        textwrap.dedent('''\
+        #ifdef lastInputSpeech
+        You are talking with your partner. The conversation is as follows:
+        #ifdef lastOutputSpeech
+        You:
+        [[lastOutputSpeech]]
+        #endif
+        Partner:
+        [[lastInputSpeech]]
+        
+        #ifdef conversationHistory
+        Here is the conversation history:
+        [[conversationHistory]]
+        #endif
+        #ifdef conversationHistory
+        Here is the conversation history:
+        [[conversationHistory]]
+        #endif
+        Considering this context, please guess and generate a list of [[num]] single words that come right after the sentence "[[text]]". \\
+        #else
+        Generate a list of [[num]] different single words that come right after the given sentence. \\
+        #endif
+        If the last word in the sentence looks incomplete, suggest the succeeding characters without replacing them. Make sure to start with a hyphen in that case. Each answer should be just one word and must start with an index number. The response should be in [[language]]. You should follow the format shown in the example below.
+        Examples:
+        sentence: "n"
+        answers:
+        1. 你
+        2. 泥
+        sentence: "你hao"
+        answers:
+        1. 好
+        2. 号
+        3. 耗
+        sentence: "woxiang"
+        answers:
+        1. 我想
+        sentence: "我想chi"
+        answers:
+        1. 吃
+        2. 迟
+        3. 持
+        4. 痴
+        
+        sentence: "今天天气zenmeyang"
+        answers:
+        1. 怎么样
+        
+        sentence: "xiexie"
+        answers:
+        1. 谢谢
+        
+        sentence: "women"
+        answers:
+        1. 我们
+        
+        sentence: "bukeqi"
+        answers:
+        1. 不客气
+        
+        sentence: "今天天气很好，bu"
+        answers:
+        1. 不
+        2. 步
+        3. 簿
+        4. 布
+        
+        sentence: "我x"
+        answers:
+        1. 想
+        2. 下
+        3. 学
+        4. 小
+        
+        sentence: "zaij"
+        answers:
+        1. 在家
+        2. 再见
+        3. 载具
+        4. 载机        
+        
         sentence: "[[text]]"
         answers:
         '''),

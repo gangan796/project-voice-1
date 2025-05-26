@@ -191,13 +191,13 @@ export class PvAppElement extends SignalWatcher(LitElement) {
   private settingPanel?: PvSettingPanel;
 
   @property({type: String, attribute: 'feature-locale'})
-  locale = 'ja';
+  locale = 'cn';
 
   @property({type: String, attribute: 'feature-sentence-macro-id'})
   private sentenceMacroId: string | null = null;
 
   @property({type: String, attribute: 'feature-languages'})
-  languageLabels = 'japaneseWithSingleRowKeyboard,englishWithSingleRowKeyboard';
+  languageLabels = 'chineseWithSingleRowKeyboard,englishWithSingleRowKeyboard';
 
   private languageIndex = 0;
   private keyboardIndex = 0;
@@ -214,7 +214,7 @@ export class PvAppElement extends SignalWatcher(LitElement) {
       new ConfigStorage(this.featureStorageDomain, CONFIG_DEFAULT),
     );
 
-    setLocale(this.locale ? this.locale : 'ja');
+    setLocale(this.locale ? this.locale : 'cn');
 
     this.stateInternal.features = {
       languages: this.languageLabels.split(','),
