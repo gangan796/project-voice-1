@@ -95,13 +95,15 @@ describe('PvAppElement', () => {
       expect(element.state.voiceSpeakingRate).toBe(
         CONFIG_DEFAULT.voiceSpeakingRate,
       );
-      expect(element.state.lang.code).toBe('ja-JP');
+      // NOTE: The default language is set to Chinese (chineseWithSingleRowKeyboard, code: 'zh-CN')
+      // This matches the default set in state.ts private langSignal
+      expect(element.state.lang.code).toBe('zh-CN');
     });
 
     it('should use provided state', () => {
       const storage = new ConfigStorage('test', TEST_CONFIG);
       const state = new State(storage);
-      state.lang = LANGUAGES['japaneseWithSingleRowKeyboard'];
+      state.lang = LANGUAGES['chineseWithSingleRowKeyboard']; // Explicitly set to Chinese language
       const element = new TEST_ONLY.PvAppElement(state);
 
       // Compare all state members with TEST_CONFIG
@@ -117,7 +119,11 @@ describe('PvAppElement', () => {
       expect(element.state.voiceSpeakingRate).toBe(
         TEST_CONFIG.voiceSpeakingRate,
       );
-      expect(element.state.lang.code).toBe('ja-JP');
+      // Using the language that's set explicitly in the test
+      expect(element.state.lang.code).toBe('zh-CN');
     });
   });
 });
+
+// NOTE: The default language is set to Chinese (chineseWithSingleRowKeyboard, code: 'zh-CN') in state.ts
+// If you change the default language in the app, update this test accordingly.

@@ -18,17 +18,19 @@ import {Config, ConfigStorage} from '../config-storage.js';
 
 export const TEST_CONFIG: Config = {
   aiConfig: 'smart',
-  checkedLanguages: ['japaneseSingleRowKeyboard'],
+  checkedLanguages: ['chineseWithSingleRowKeyboard'],
   enableEarcons: false,
   expandAtOrigin: true,
   initialPhrases: ['Yes', 'No'],
   persona: "I'm an example model smarter than example model 1.0",
   sentenceSmallMargin: false,
-  ttsVoice: 'ja-JP-ExampleVoice-X',
+  ttsVoice: 'zh-CN-ExampleVoice-X',
   voicePitch: 5,
   voiceSpeakingRate: 3,
 };
 
+// NOTE: The default language is set to Chinese (chineseWithSingleRowKeyboard, code: 'zh-CN') in state.ts
+// If you change the default language in the app, update this test accordingly.
 describe('UsaStorage', () => {
   describe('read', () => {
     beforeEach(() => {

@@ -34,7 +34,9 @@ describe('State', () => {
   });
 
   it('initializes with default values', () => {
-    expect(state.lang.code).toEqual('ja-JP');
+    // NOTE: The default language is set to Chinese (chineseWithSingleRowKeyboard, code: 'zh-CN')
+    // This matches the default set in state.ts private langSignal
+    expect(state.lang.code).toEqual('zh-CN');
     expect(state.text).toEqual('');
     expect(state.aiConfig).toEqual(TEST_CONFIG.aiConfig);
     const aiConfigs = state.lang.aiConfigs;
