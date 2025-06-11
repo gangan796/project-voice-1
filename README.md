@@ -14,7 +14,7 @@ Ensure you have configured SSH key to development Project VOICE in github (see
 [here](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)).
 
 ```shell
-$ git clone git@github.com:zesonzhang/project-voice.git
+$ git clone git@github.com:project-voice-buu/project-voice.git
 $ cd project-voice
 ```
 
