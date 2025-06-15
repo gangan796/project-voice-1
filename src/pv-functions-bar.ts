@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+//功能栏的实现
+
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
@@ -187,52 +189,8 @@ export class PvFunctionsBar extends SignalWatcher(LitElement) {
             }}"
           >
             <md-icon>undo</md-icon>
-            <span>${msg('Undo')}</span>
+            <span>撤回</span>
           </button>
-          <button
-            @click="${() => {
-              this.fireEvent(EVENT_KEY.backspaceClick);
-            }}"
-            ?disabled=${isTextEmpty}
-          >
-            <md-icon>backspace</md-icon>
-            <span>${msg('Backspace')}</span>
-          </button>
-          <button
-            @click="${() => {
-              this.fireEvent(EVENT_KEY.deleteClick);
-            }}"
-            ?disabled=${isTextEmpty}
-          >
-            <md-icon>delete</md-icon>
-            <span>${msg('Clear')}</span>
-          </button>
-          <hr />
-          ${isLanguageSwitchable
-            ? html`
-                <button
-                  @click="${() => {
-                    this.fireEvent(EVENT_KEY.languageChangeClick);
-                  }}"
-                >
-                  <md-icon>language</md-icon>
-                  <span>${msg('Language')}</span>
-                </button>
-              `
-            : ''}
-          ${isKeyboardSwitchable
-            ? html`
-                <button
-                  @click="${() => {
-                    this.fireEvent(EVENT_KEY.keyboardChangeClick);
-                  }}"
-                >
-                  <md-icon>language_japanese_kana</md-icon>
-                  <span>${msg('Keyboard')}</span>
-                </button>
-              `
-            : ''}
-          <hr />
           <button
             @click="${() => {
               this.fireEvent(EVENT_KEY.contentCopyClick);
@@ -240,25 +198,30 @@ export class PvFunctionsBar extends SignalWatcher(LitElement) {
             ?disabled=${isTextEmpty}
           >
             <md-icon>content_copy</md-icon>
-            <span>${msg('Copy')}</span>
+            <span>复制</span>
           </button>
-
           <button
             @click="${this.onTtsButtonClick}"
             ?disabled=${this.isTtsReading || isTextEmpty}
           >
             <md-icon>text_to_speech</md-icon>
-            <span>${msg('Read aloud')}</span>
+            <span>朗读</span>
           </button>
-
-          <hr />
+          <button
+            @click="${() => {
+              this.fireEvent(EVENT_KEY.languageChangeClick);
+            }}"
+          >
+            <md-icon>language</md-icon>
+            <span>语言</span>
+          </button>
           <button
             @click="${() => {
               this.fireEvent(EVENT_KEY.settingClick);
             }}"
           >
             <md-icon>settings</md-icon>
-            <span>${msg('Settings')}</span>
+            <span>设置</span>
           </button>
         </div>
       </div>

@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+
+//主页面的布局
+
 import '@material/web/progress/circular-progress.js';
 import './macro-api-client.js';
 import './pv-button.js';
@@ -178,7 +181,7 @@ export class PvAppElement extends SignalWatcher(LitElement) {
   @property({type: Array})
   words: string[] = [];
 
-  @property()
+  @property({type: Boolean})
   isLoading = false;
 
   @query('pv-textarea-wrapper')
@@ -210,9 +213,7 @@ export class PvAppElement extends SignalWatcher(LitElement) {
   connectedCallback() {
     super.connectedCallback();
 
-    this.stateInternal.setStorage(
-      new ConfigStorage(this.featureStorageDomain, CONFIG_DEFAULT),
-    );
+    this.stateInternal = new State(); // 让State类自己处理ConfigStorage的初始化
 
     setLocale(this.locale ? this.locale : 'cn');
 
@@ -350,19 +351,15 @@ export class PvAppElement extends SignalWatcher(LitElement) {
   @playClickSound()
   private onCharacterSelect(e: CharacterSelectEvent) {
     if (!this.textField) return;
+    if (e.detail === 'backspace') {
+      this.textField.textBackspace();
+      return;
+    }
     const normalized = normalize(
       PvAppElement.composeUpdatedSentence(this.textField.value, e.detail),
       this.textField.isLastInputSuggested(),
     );
     this.textField.setTextFieldValue(normalized, [InputSource.CHARACTER]);
-  }
-
-  @playClickSound()
-  private onSuggestionSelect(e: SuggestionSelectEvent) {
-    const [value, index] = e.detail;
-    this.textField?.setTextFieldValue(value, [
-      {kind: InputSourceKind.SUGGESTED_SENTENCE, index},
-    ]);
   }
 
   @playClickSound()
@@ -441,27 +438,96 @@ export class PvAppElement extends SignalWatcher(LitElement) {
     }
   }
 
+  @playClickSound()
+  private onSuggestionSelect(e: SuggestionSelectEvent) {
+    const [value, index] = e.detail;
+    if (this.textField) {
+      this.textField.setTextFieldValue(value, [
+        {kind: InputSourceKind.SUGGESTED_SENTENCE, index},
+      ]);
+    }
+  }
+
+  private renderSuggestions() {
+    const hasSuggestions = this.state.initialPhrases.length > 0;
+
+    // Render actual suggestions or placeholders
+    if (hasSuggestions) {
+      return html`
+        ${this.state.initialPhrases.map((phrase) => html`
+          <li class="sentence-item">
+            <pv-suggestion-stripe 
+              .state=${this.stateInternal}
+              .suggestion=${phrase}
+              @select=${this.onSuggestionSelect}
+            ></pv-suggestion-stripe>
+          </li>
+        `)}
+        ${this.renderPlaceholders(this.state.initialPhrases.length, this.MAX_SENTENCE_SUGGESTIONS - this.state.initialPhrases.length, 'sentence-placeholder')}
+      `;
+    } else {
+      // Render only placeholders if no suggestions
+      return html`
+        ${this.renderPlaceholders(0, this.MAX_SENTENCE_SUGGESTIONS, 'sentence-placeholder')}
+      `;
+    }
+  }
+
+  private renderPlaceholders(startIndex: number, count: number, className: string) {
+    const placeholders = [];
+    for (let i = 0; i < count; i++) {
+      placeholders.push(html`<li class="${className}"></li>`);
+    }
+    return placeholders;
+  }
+
   protected render() {
     const words = this.isBlank()
       ? this.stateInternal.initialPhrases
       : this.words;
-    const bodyOfWordSuggestions = words.map(word =>
-      !word
-        ? ''
-        : html`
-            <li>
-              <pv-button
-                label="${word}"
-                rounded
-                @click="${() => this.onSuggestedWordClick(word)}"
-              ></pv-button>
-            </li>
-          `,
-    );
 
-    const bodyOfSentenceSuggestions = this.suggestions.map(suggestion => {
-      if (!this.textField?.value) return '';
-      const text = normalize(this.textField.value);
+    // 确保候选字/词始终有12个元素，不足时用空字符串补齐
+    const candidateCount = 12; // 4行3列
+    const wordsToDisplay = [...words];
+    while (wordsToDisplay.length < candidateCount) {
+      wordsToDisplay.push(''); // 用空字符串作为占位符
+    }
+
+    // 生成候选字/词的HTML结构 (4x3 网格)
+    const bodyOfWordSuggestions = wordsToDisplay.map((word) => {
+      if (!word) {
+        return html`<div class="candidate-placeholder"></div>`; // 占位符
+      }
+      return html`
+        <button
+          class="candidate-btn"
+          @click="${() => this.onSuggestedWordClick(word)}"
+        >
+          ${word}
+        </button>
+      `;
+    });
+
+    // 定义句子显示数量
+    const maxSentenceSuggestions = 4;
+    // 根据实际建议和占位符创建要显示的句子列表
+    const sentencesToRender = [];
+
+    // 填充实际建议
+    for (let i = 0; i < Math.min(this.suggestions.length, maxSentenceSuggestions); i++) {
+      sentencesToRender.push(this.suggestions[i]);
+    }
+
+    // 填充占位符
+    while (sentencesToRender.length < maxSentenceSuggestions) {
+      sentencesToRender.push(''); // 用空字符串作为占位符
+    }
+
+    const bodyOfSentenceSuggestions = sentencesToRender.map((suggestion) => {
+      if (!suggestion) {
+        return html`<li><div class="sentence-placeholder"></div></li>`; // 占位符
+      }
+      const text = normalize(this.textField?.value ?? '');
       const sharedOffset = getSharedPrefix([suggestion, text]);
       return html` <li
         class="${this.stateInternal.sentenceSmallMargin ? 'tight' : ''}"
@@ -477,38 +543,28 @@ export class PvAppElement extends SignalWatcher(LitElement) {
 
     return html`
       <div class="container">
-        <pv-functions-bar
-          .state=${this.stateInternal}
-          @undo-click=${this.onUndoClick}
-          @backspace-click=${this.onBackspaceClick}
-          @delete-click=${this.onDeleteClick}
-          @language-change-click=${this.onLanguageChangeClick}
-          @keyboard-change-click=${this.onKeyboardChangeClick}
-          @content-copy-click=${this.onContentCopyClick}
-          @setting-click=${this.onSettingClick}
-
-        ></pv-functions-bar>
-        <div class="main">
+        <div class="left-panel">
           <div class="keypad">
             <pv-character-input
               .state=${this.stateInternal}
               @character-select=${this.onCharacterSelect}
               @keypad-handler-click=${this.onKeypadHandlerClick}
             ></pv-character-input>
-            <div class="suggestions">
-              <ul class="word-suggestions">
-                ${bodyOfWordSuggestions}
-              </ul>
-              <ul class="sentence-suggestions">
-                ${bodyOfSentenceSuggestions}
-              </ul>
-              <div class="loader ${this.isLoading ? 'loading' : ''}">
-                <md-circular-progress indeterminate></md-circular-progress>
-              </div>
-            </div>
-
           </div>
-          <div>
+          <ul class="word-suggestions">
+            ${bodyOfWordSuggestions}
+          </ul>
+        </div>
+        <div class="center-panel">
+          <div class="suggestions">
+            <ul class="sentence-suggestions">
+              ${bodyOfSentenceSuggestions}
+            </ul>
+            <div class="loader ${this.isLoading ? 'loading' : ''}">
+              <md-circular-progress indeterminate></md-circular-progress>
+            </div>
+          </div>
+          <div class="input-area">
             <pv-textarea-wrapper
               .state=${this.stateInternal}
               @text-update=${() => {
@@ -516,10 +572,19 @@ export class PvAppElement extends SignalWatcher(LitElement) {
               }}
             ></pv-textarea-wrapper>
           </div>
-          <div class="language-name">${this.stateInternal.lang.render()}</div>
-
         </div>
-
+        <div class="right-panel">
+          <pv-functions-bar
+            .state=${this.stateInternal}
+            @undo-click=${this.onUndoClick}
+            @backspace-click=${this.onBackspaceClick}
+            @delete-click=${this.onDeleteClick}
+            @language-change-click=${this.onLanguageChangeClick}
+            @keyboard-change-click=${this.onKeyboardChangeClick}
+            @content-copy-click=${this.onContentCopyClick}
+            @setting-click=${this.onSettingClick}
+          ></pv-functions-bar>
+        </div>
       </div>
 
       <pv-setting-panel
@@ -527,6 +592,12 @@ export class PvAppElement extends SignalWatcher(LitElement) {
         @ok-click=${this.onOkClick}
       ></pv-setting-panel>
     `;
+  }
+
+  protected MAX_SENTENCE_SUGGESTIONS = 5; // 定义最大句子联想数量
+
+  override firstUpdated() {
+    this.state.loadState();
   }
 }
 

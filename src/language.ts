@@ -173,7 +173,7 @@ abstract class Chinese implements Language {
     },
     smart: {
       model: 'gemma3:4b',
-      sentence: 'SentenceJapaneseLong20241002',
+      sentence: 'SentenceGeneric20250311',
       word: 'WordGeneric20240628',
     },
   };

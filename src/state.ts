@@ -219,9 +219,15 @@ class State {
   }
 
   constructor(storage: ConfigStorage | null = null) {
-    this.storage =
-      storage ?? new ConfigStorage('com.google.pv', CONFIG_DEFAULT);
+    this.storage = storage ?? new ConfigStorage('com.google.pv', CONFIG_DEFAULT);
     this.loadState();
+
+    // 硬编码初始候选词，确保有12个元素，不足时用空字符串补齐
+    const hardcodedInitialPhrases = [
+      '-我', '-你', '-他', '-她', '-它',
+      '-是', '-吃', '-睡', '-快', '-累', '-疼', '-高', // 7个空字符串补齐12个
+    ];
+    this.initialPhrasesSignal.set(hardcodedInitialPhrases);
   }
 }
 

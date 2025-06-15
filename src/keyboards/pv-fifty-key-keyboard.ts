@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+//调整九键区布局
 import {css, html, LitElement} from 'lit';
 import {customElement} from 'lit/decorators.js';
 
@@ -51,7 +51,7 @@ export const STEGANA_INVERT = new Map(
 );
 
 type Key = {label: string; value: string};
-
+//修改九键区为3×3网格布局
 const KEYS: (string | Key)[][] = [
   ['あ', 'い', 'う', 'え', 'お'],
   ['か', 'き', 'く', 'け', 'こ'],
@@ -66,15 +66,25 @@ const KEYS: (string | Key)[][] = [
   ['゛', '゜', 'ー', '？', '！'],
 ];
 
+const PUNCTUATION_KEYS: (string | Key)[][] = [
+  ['，', '。', '？', '！'],
+];
+
 @customElement('pv-fifty-key-keyboard')
 export class PvFiftyKeyKeyboard extends LitElement {
   static styles = css`
     .container {
-      direction: rtl;
       display: grid;
       gap: 0.5rem;
-      grid-template-columns: repeat(${KEYS.length}, 1fr);
-      grid-template-rows: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .punctuation {
+      display: grid;
+      gap: 0.5rem;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 1fr;
     }
 
     button {

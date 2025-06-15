@@ -1,5 +1,5 @@
 # Build based on node slim
-FROM node:lts-slim
+FROM dockerproxy.com/library/node:18
 
 # Set network interface binding to make the server listen on all interfaces
 # This is needed to make the server accessible from outside the container.

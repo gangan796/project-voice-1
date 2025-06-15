@@ -99,6 +99,45 @@ export const SWEDISH_SINGLE_ROW_KEYGRID: Key[][] = [
     {label: '.,!?', value: ['␣.,!?']},
   ],
 ];
+//新增九宫格数据结构
+export const ALPHANUMERIC_NINE_KEY_KEYGRID: Key[][] = [
+  [
+    {label: 'abc', value: ['abc']},
+    {label: 'def', value: ['def']},
+    {label: 'ghi', value: ['ghi']},
+  ],
+  [
+    {label: 'jkl', value: ['jkl']},
+    {label: 'mno', value: ['mno']},
+    {label: 'pqrs', value: ['pqrs']},
+  ],
+  [
+    {label: 'tuv', value: ['tuv']},
+    {label: 'wxyz', value: ['wxyz']},
+    {label: '0~9', value: ['01234', '56789']},
+  ],
+];
+
+// UI设计图风格九宫格数据结构
+const NINE_KEY_GRID: Key[][] = [
+  [
+    {label: '0-9', value: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']},
+    {label: 'ABC', value: ['a', 'b', 'c']},
+    {label: 'DEF', value: ['d', 'e', 'f']},
+  ],
+  [
+    {label: 'GHI', value: ['g', 'h', 'i']},
+    {label: 'JKL', value: ['j', 'h', 'l']},
+    {label: 'MNO', value: ['m', 'n', 'o']},
+  ],
+  [
+    {label: 'PQRS', value: ['p', 'q', 'r', 's']},
+    {label: 'TUV', value: ['t', 'u', 'v']},
+    {label: 'WXYZ', value: ['w', 'x', 'y', 'z']},
+  ],
+];
+const PUNCTUATION_KEY = {label: '.,!?', value: ['.', ',', '!', '?']};
+const DELETE_KEY = {label: '删除', value: ['backspace']};
 
 export class PvSingleRowKeyboard extends LitElement {
   constructor(public keygrid: Key[][]) {
@@ -192,5 +231,127 @@ export class PvGermanSingleRowKeyboard extends PvSingleRowKeyboard {
 export class PvSwedishSingleRowKeyboard extends PvSingleRowKeyboard {
   constructor() {
     super(SWEDISH_SINGLE_ROW_KEYGRID);
+  }
+}
+// 新建九宫格键盘组件
+@customElement('pv-alphanumeric-nine-key-keyboard')
+export class PvAlphanumericNineKeyKeyboard extends LitElement {
+  static styles = css`
+    :host {
+      display: block;
+      width: 100%;
+      max-width: 597px; /* 整体九宫格区域宽度 */
+    }
+    .nine-key-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 165px); /* 3列，每列按钮宽度165px */
+      grid-template-rows: repeat(4, 148px); /* 4行，每行按钮高度148px */
+      gap: 20px 14px; /* 垂直间距20px，水平间距14px */
+      width: calc(3 * 165px + 2 * 14px); /* 精确计算网格总宽度 */
+      max-width: 100%; /* 防止超出父容器 */
+      margin-inline: auto; /* 居中显示 */
+      margin-bottom: 20px; /* 九宫格与下方按钮或候选字/词的间距 */
+    }
+    .key-btn {
+      background: #fff;
+      border: 2px solid #c6e2ff;
+      border-radius: 30px; /* 九宫格按钮圆角 */
+      font-size: 1.2rem;
+      height: 148px; /* 占满网格单元格高度 */
+      width: 100%; /* 占满网格单元格宽度 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .key-btn:active {
+      background: #e3f2fd;
+    }
+    .delete-btn {
+      background: #fff;
+      border: 2px solid #c6e2ff;
+      border-radius: 30px; /* 删除按钮圆角 */
+      font-size: 1.2rem;
+      height: 103px; /* 删除按钮高度 */
+      width: 344px; /* 删除按钮宽度 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .delete-btn:active {
+      background: #e3f2fd;
+    }
+    .punctuation-key-btn {
+      background: #fff;
+      border: 2px solid #c6e2ff;
+      border-radius: 30px; /* 标点符号按钮圆角 */
+      font-size: 1.2rem;
+      height: 103px; /* 标点符号按钮高度 */
+      width: 165px; /* 标点符号按钮宽度 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .punctuation-key-btn:active {
+      background: #e3f2fd;
+    }
+    .bottom-row {
+      display: flex;
+      justify-content: center; /* 居中对齐 */
+      gap: 14px; /* 标点符号按钮与删除按钮之间的水平间距 */
+      width: calc(165px + 14px + 344px); /* 精确计算下方按钮行总宽度 */
+      max-width: 100%; /* 防止超出父容器 */
+      margin-inline: auto; /* 居中显示 */
+    }
+  `;
+
+  private _onKeyClick(value: string) {
+    this.dispatchEvent(
+      new CustomEvent('character-select', {
+        detail: value,
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  render() {
+    return html`
+      <div class="keyboard-area">
+        <div class="nine-key-grid">
+          ${NINE_KEY_GRID.flat().map(
+            key => {
+              console.log('key value:', key.value);
+              return html`
+                <pv-expand-keypad
+                  .label=${key.label}
+                  .value=${key.value}
+                  @select=${(e: CustomEvent) => this._onKeyClick(e.detail)}
+                ></pv-expand-keypad>
+              `;
+            }
+          )}
+          <pv-expand-keypad
+            .label=${PUNCTUATION_KEY.label}
+            .value=${PUNCTUATION_KEY.value}
+            @select=${(e: CustomEvent) => this._onKeyClick(e.detail)}
+          ></pv-expand-keypad>
+          <button
+            class="key-btn delete-btn"
+            @click=${() => this._onKeyClick(DELETE_KEY.value[0])}
+          >
+            <span class="delete-icon">✖</span> 删除
+          </button>
+        </div>
+      </div>
+    `;
   }
 }

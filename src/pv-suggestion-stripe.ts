@@ -75,9 +75,6 @@ export class PvSuggestionStripeElement extends LitElement {
     :host {
       -ms-overflow-style: none;
       display: block;
-      overflow-x: scroll;
-      scrollbar-width: none;
-      white-space: nowrap;
     }
 
     :host::-webkit-scrollbar {

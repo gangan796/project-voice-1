@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+//九键区的实现
 import {SignalWatcher} from '@lit-labs/signals';
 import {LitElement} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
@@ -32,6 +32,6 @@ export class PvCharacterInputElement extends SignalWatcher(LitElement) {
   private state!: State;
 
   render() {
-    return html`<${this.state.keyboard} .state=${this.state}></${this.state.keyboard}>`;
+    return html`<pv-alphanumeric-nine-key-keyboard></pv-alphanumeric-nine-key-keyboard>`;
   }
 }
