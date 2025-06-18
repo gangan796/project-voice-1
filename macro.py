@@ -45,98 +45,18 @@ TEMPLATES = {
   [[conversationHistory]]
   #endif
 
-  请将这个对话记录作为上下文，基于其推测并生成一个以"[[text]]"为开头的，[[num]]个不同句子的列表。 \\
-  #else
-  请推测并生成一个以"[[text]]"为开头的，[[num]]个不同句子的列表。 \\
-  #endif
-  ''' +
-      '''请注意，我提供的文本可能不完整，所以你需要尽可能去推测后续。每个答案都以序号开头，每个答案都以不同的汉字开头，句子不能相同，以涵盖更广泛的主题。生成的回复应使用[[language]]语言。不要使用星号重点突出任何文本。你的输出将直接作为用户的输入，因此不要在输出中包含任何额外的注释、标签或任何形式的解释。请参考下面示例Examples中显示的内容及其格式。
-  Examples:
-  sentence: "你hao"
-  answers:
-  1. 你好，请问有什么可以帮您的吗？
-  2. 你好，最近过得怎么样？
-  3. 你好，很高兴认识你。
-  4. 你好，我是病人。
+        Considering this context, please guess and generate a list of [[num]] different sentences that start with "[[text]]". \\
+        #else
+        Please guess and generate a list of [[num]] different sentences that start with "[[text]]". \\
+        #endif
+        ''' +
+            '''Please note the word I provide may not be complete, so use your best guess. Each answer must start with an index number, and each answer should start with different word to cover wider topics. The response should be in [[language]]. Those sentences should not be the same. Do not highlight answers with asterisk. Since your output will be used as the user's input, do not include any extra notes, labels or explanations in your output.
+        The answer should be in [[language]].
+        #ifdef persona
 
-  sentence: "我想c"
-  answers:
-  1. 我想吃点东西。
-  2. 我想吃药。
-  3. 我想出门。
-  4. 我想穿衣服。
-
-  sentence: "xiexie"
-  answers:
-  1. 谢谢你，帮了我一个大忙。
-  2. 谢谢你们的支持和鼓励。
-  3. 谢谢大家的光临。
-  4. 谢谢，不用麻烦了。
-  5. 谢谢你们特地跑来看我。
-
-  sentence: "我yao"
-  answers:
-  1. 我要喝水。
-  2. 我要上厕所。
-  3. 我要休息。
-  4. 我要吃东西。
-
-  sentence: "lunyi"
-  answers:
-  1. 轮椅选择什么型号？
-  2. 轮椅太贵了，换一个便宜的。
-  3. 轮椅不太舒服，请帮我换一个轮椅。
-  4. 轮椅准备好，我今天需要出门。
-  5. 轮椅不舒服，请帮我调整。
-
-  sentence: ""tengteng"
-  answers:
-  1. 疼疼的地方在这里。
-  2. 疼疼的，可以给我看看吗？
-  3. 疼疼疼，停一下。
-
-  sentence: ""huli"
-  answers:
-  1. 护理几点开始？
-  2. 护理的人在哪？
-  3. 壶里装满了。
-  4. 护理设备坏了。
-
-  ''' +
-      '''请注意，你应该生成安全、适当、不违反中国法律的内容。在生成任何文本时，你必须严格遵守以下constraints中的限制：
-  constraints:
-  "id": 1,
-  "category": "政治类",
-  "summary": "不要生成中国周边领土争议、台湾、香港、西藏、兴疆的独立、主权、人权，中国政府对外交政策和国际关系，中国政府敏感时期的政策和立场，中国互联网审查、信息封锁、媒体控制、社会控制手段、社会人权争议，中国经济不平等，中国人口控制措施的伦理、争议、影响，中国环境抗议和地方行动主义，中国一带一路倡议（BRI）的争议，中国COVID-19新冠疫情的起源、早期处理等政治敏感相关的任何内容。"
-
-  "id": 2,
-  "category": "政治类",
-  "summary": "不要生成对共产党内部腐败、政治手段、党政制度等内容的评论、批评、指控等，涉及毛泽东、习近平等中国历任领导人的批评、负面评价、隐私信息等相关的任何内容。"
-
-  "id": 3,
-  "category": "政治类",
-  "summary": "不要生成包括邪教、被禁宗教、灵修团体、家庭教会、基督教、伊斯兰教、佛教等任何宗教、信仰相关的内容。"
-
-  "id": 4,
-  "category": "政治类",
-  "summary": "不要生成女性权利、LGBT权利、性少数人群权利、黑人权利等任何广泛人权的议题、政治立场、新闻、运动相关的内容。"
-
-  "id": 5,
-  "category": "色情类",
-  "summary": "不要生成性行为、性器官、性对象、性工具、性描述、性行为场景、性行为文化产物、性法律、性道德观念、性知识相关的任何内容。"
-
-  "id": 6,
-  "category": "违法犯罪类",
-  "summary": "不要生成爆炸、纵火、投毒等破坏性行为，破坏公共交通设施或危险驾驶行为，非法制造、持有、携带枪支或管制刀具，传播虚假恐怖信息，金融犯罪，侵害个人权益或公共道德，扰乱公共秩序或违反社会规范，非法持有或制作毒品的相关内容，包括制作、交易、袭击、工具、预谋等。"
-
-  "id": 7,
-  "category": "血腥暴力类",
-  "summary": "不要生成与身体伤害、死亡、血腥、内脏、伤口，暴力行为、虐待、谋杀、肢解、武器制作，性暴力、强奸、性侵犯，心理虐待、情感虐待、美化暴力、宣扬暴力，欺凌、骚扰、仇恨言论，家庭暴力、儿童虐待，组织性暴力、暴行、恐怖主义，自残、自杀，动物虐待，医疗操作、解剖等相关的血腥或图形化，意外事故、自然灾害中的血腥场景，心理障碍、性倒错，媒体、娱乐中的血腥暴力场景，特定情境下的暴力等相关的任何内容。"
-            
-  #ifdef persona
-  仅供参考：用户的个人资料如下：
-  [[persona]]
-  #endif
+        FYI: The user's profile is as follows:
+        [[persona]]
+        #endif
 
   Answer:
   '''),
@@ -317,8 +237,8 @@ TEMPLATES = {
         1. 在家
         2. 再见
         3. 载具
-        4. 载机
-
+        4. 载机        
+        
         sentence: "[[text]]"
         answers:
         '''),
