@@ -66,6 +66,9 @@ export class PvExpandKeypadElement extends LitElement {
   @query('button.handler')
   handlerButton?: HTMLButtonElement;
 
+  @query('.keypad-popup')
+  keypadPopup?: HTMLDivElement;
+
   @query('ul.container')
   container?: HTMLUListElement;
 
@@ -93,10 +96,15 @@ export class PvExpandKeypadElement extends LitElement {
       display: flex;
       font-family: 'Roboto Mono', 'Noto Sans JP', monospace;
       justify-content: center;
-      max-width: 8rem;
+      max-width: 10rem;
       min-width: 2rem;
-      padding: 0;
       width: 100%;
+      height: 100%;
+    }
+
+    /* 针对标点符号按钮设置特殊高度 */
+    :host([label=".,!?"]) button.handler {
+      height: 103px;
     }
 
     button:hover,
@@ -114,7 +122,7 @@ export class PvExpandKeypadElement extends LitElement {
       padding: 0;
     }
 
-    ul.container {
+    .keypad-popup {
       display: none;
       left: 0;
       position: absolute;
@@ -122,17 +130,23 @@ export class PvExpandKeypadElement extends LitElement {
       z-index: 1000;
     }
 
-    :host([open]) ul.container {
+    :host([open]) .keypad-popup {
       display: block;
     }
 
-    ul.row {
+    ul.container {
       display: flex;
       gap: 0.5rem;
     }
 
+    ul.row {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+    }
+
     ul button {
-      margin-bottom: 0.5rem;
+      /* margin-bottom is not needed for horizontal layout */
     }
 
     .backdrop {
@@ -177,32 +191,28 @@ export class PvExpandKeypadElement extends LitElement {
   }
 
   private onKeypadOpen() {
-    if (!this.container) return;
+    if (!this.keypadPopup) return;
     if (!this.expandedKeypadRows) return;
     if (!this.handlerButton) return;
     if (this.expandAtOrigin) {
-      this.container.style.position = 'absolute';
-      this.container.style.top = '0';
-      this.container.style.left = '0';
-      this.expandedKeypadRows.forEach(row => {
-        row.style.transform = 'none';
-      });
+      this.keypadPopup.style.position = 'absolute';
+      this.keypadPopup.style.top = '0';
+      this.keypadPopup.style.left = '0';
     } else {
       const handlerBBox = this.handlerButton.getBoundingClientRect();
-      this.container.style.position = 'fixed';
-      this.container.style.top = `${handlerBBox?.top}px`;
-      this.container.style.left = `${handlerBBox?.left}px`;
+      this.keypadPopup.style.position = 'fixed';
+      this.keypadPopup.style.top = `${handlerBBox.bottom + 5}px`;
+      this.keypadPopup.style.left = `${handlerBBox.left}px`;
 
-      // Shift the keypad to the left if it overflows the right edge of the screen.
-      this.expandedKeypadRows.forEach(row => {
-        row.style.transform = '';
-        const rowBBox = row.getBoundingClientRect();
-        if (rowBBox.right > window.innerWidth) {
-          row.style.transform = `translateX(${
-            window.innerWidth - rowBBox.right - 16
-          }px)`;
-        }
-      });
+      // Reset transform before measuring.
+      this.keypadPopup.style.transform = '';
+      // Measure and apply transform for overflow.
+      const popupBBox = this.keypadPopup.getBoundingClientRect();
+      if (popupBBox.right > window.innerWidth) {
+        this.keypadPopup.style.transform = `translateX(${
+          window.innerWidth - popupBBox.right - 16
+        }px)`;
+      }
     }
     this.firstKeypad?.focus();
     this.addEventListener('keydown', this.onKeydownWhileOpenWithThis);
@@ -261,50 +271,37 @@ export class PvExpandKeypadElement extends LitElement {
       >
         ${this.label}
       </button>
-      <ul class="container">
-        <button
-          class="close"
-          @click="${() => {
-            this.open = false;
-            this.dispatchEvent(
-              new CharacterSelectEvent('keypad-handler-click', {
-                detail: 'close',
-                bubbles: true,
-                composed: true,
-              }),
-            );
-          }}"
-        >
-          close
-        </button>
-        ${this.value.map(
-          row =>
-            html`<li>
-              <ul class="row">
-                ${row.split('').map(
-                  c =>
-                    html`<li>
-                      <button
-                        @click="${() => {
-                          this.open = false;
-                          const characterToSend = c.replace('␣', ' ');
-                          this.dispatchEvent(
-                            new CharacterSelectEvent('character-select', {
-                              detail: characterToSend,
-                              bubbles: true,
-                              composed: true,
-                            }),
-                          );
-                        }}"
-                      >
-                        ${c}
-                      </button>
-                    </li>`,
-                )}
-              </ul>
-            </li>`,
-        )}
-      </ul>
+      <div class="keypad-popup">
+        <ul class="container">
+          ${this.value.map(
+            (row) =>
+              html`<li>
+                <ul class="row">
+                  ${row.split('').map(
+                    (c) =>
+                      html`<li>
+                        <button
+                          @click="${() => {
+                            this.open = false;
+                            const characterToSend = c.replace('␣', ' ');
+                            this.dispatchEvent(
+                              new CharacterSelectEvent('character-select', {
+                                detail: characterToSend,
+                                bubbles: true,
+                                composed: true,
+                              }),
+                            );
+                          }}"
+                        >
+                          ${c}
+                        </button>
+                      </li>`
+                  )}
+                </ul>
+              </li>`
+          )}
+        </ul>
+      </div>
       <div
         class="backdrop"
         @click="${() => {

@@ -45,7 +45,7 @@ export class PvScalableTextareaElement extends LitElement {
 
     textarea {
       background: var(--color-surface);
-      border-radius: 0.5rem;
+      border-radius: 25px 25px 0 0;
       border: solid 1px var(--color-outline);
       box-sizing: border-box;
       color: var(--color-on-surface);

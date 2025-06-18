@@ -15,7 +15,7 @@
  */
 
 :root {
-  --color-primary: #fcc934;  /* Main accent/highlight color */
+  --color-primary: #87D1FD;  /* Main accent/highlight color */
   --color-on-primary: #202124;  /* Text/icons on primary */
   --color-secondary: #e8f0fe;  /* Pale blue accent */
   --color-on-secondary: #202124;  /* Text/icons on secondary */
@@ -41,6 +41,7 @@ body {
 pv-app {
   box-sizing: border-box;
   height: 100%;
+  width: 100%;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -258,7 +258,7 @@ export class PvAlphanumericNineKeyKeyboard extends LitElement {
       border-radius: 30px; /* 九宫格按钮圆角 */
       font-size: 1.2rem;
       height: 148px; /* 占满网格单元格高度 */
-      width: 100%; /* 占满网格单元格宽度 */
+      width: 165px; /* 占满网格单元格宽度 */
       display: flex;
       align-items: center;
       justify-content: center;

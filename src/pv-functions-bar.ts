@@ -81,7 +81,7 @@ export class PvFunctionsBar extends SignalWatcher(LitElement) {
       display: flex;
       flex-direction: column;
       font-family: inherit;
-      margin: 0.25rem 0;
+      margin: 0.60rem 0;
       padding: 0;
     }
 
