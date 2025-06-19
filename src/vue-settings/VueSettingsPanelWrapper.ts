@@ -47,8 +47,8 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       background: white;
       border-radius: 12px;
       width: 90%;
-      max-width: 600px;
-      max-height: 80vh;
+      max-width: 750px;
+      max-height: 85vh;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
       overflow: hidden;
       display: flex;
@@ -92,15 +92,19 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       color: #333;
     }
 
-    #vue-mount-point .settings-tabs {
-      display: flex;
-      background: #f8f9fa;
-      border-bottom: 1px solid #e0e0e0;
-    }
+          #vue-mount-point .settings-tabs {
+        display: flex;
+        flex-direction: column;
+        background: #f8f9fa;
+        border-right: 1px solid #e0e0e0;
+        border-bottom: none;
+        width: 180px;
+        min-width: 180px;
+      }
 
     #vue-mount-point .tab-btn {
-      flex: 1;
-      padding: 16px;
+      flex: none;
+      padding: 16px 20px;
       border: none;
       background: transparent;
       cursor: pointer;
@@ -108,6 +112,8 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       font-weight: 500;
       color: #666;
       transition: all 0.2s;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
     }
 
     #vue-mount-point .tab-btn:hover {
@@ -116,11 +122,28 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
     }
 
     #vue-mount-point .tab-btn.active {
-      background: #1976d2;
-      color: white;
+      background: rgba(111, 201, 255, 0.11);
+      color: #2D85F0;
       font-weight: 600;
     }
 
+    #vue-mount-point .settings-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    #vue-mount-point .settings-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #vue-mount-point .settings-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
     #vue-mount-point .settings-content {
       flex: 1;
       overflow-y: auto;

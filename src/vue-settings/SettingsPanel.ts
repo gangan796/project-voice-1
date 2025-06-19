@@ -83,7 +83,6 @@ export default defineComponent({
      */
     const loadSettingsFromState = (): void => {
       if (props.state) {
-        // 使用类型断言确保aiConfig的类型安全
         const aiConfig = props.state.aiConfig as 'fast' | 'smart' | 'classic';
         settings.aiConfig = aiConfig && ['fast', 'smart', 'classic'].includes(aiConfig) ? aiConfig : 'smart';
         settings.expandAtOrigin = props.state.expandAtOrigin || false;
@@ -344,49 +343,48 @@ export default defineComponent({
           }
         }
       }, [
-        h('div', { class: 'settings-modal' }, [
-          // 头部
-          h('div', { class: 'settings-header' }, [
-            h('h2', {}, '设置'),
-            h('button', {
-              class: 'close-btn',
-              'aria-label': '关闭',
-              onClick: handleClose
-            }, [
-              h('span', {}, '×')
-            ])
-          ]),
-          
-          // 标签页导航
-          h('div', { class: 'settings-tabs' }, 
-            tabs.map((tab, index) => 
-              h('button', {
-                key: tab.key,
-                class: ['tab-btn', { active: activeTab.value === index }],
-                onClick: () => { activeTab.value = index; }
-              }, tab.name)
-            )
-          ),
-          
-          // 内容区域
-          h('div', { class: 'settings-content' }, [
-            activeTab.value === 0 ? renderGeneralTab() :
-            activeTab.value === 1 ? renderConfigTab() :
-            renderVoiceTab()
-          ]),
-          
-          // 底部按钮
-          h('div', { class: 'settings-footer' }, [
-            h('button', {
-              class: 'btn-secondary',
-              onClick: handleCancel
-            }, '取消'),
-            h('button', {
-              class: 'btn-primary',
-              onClick: handleConfirm
-            }, '确定')
-          ])
-        ])
+                 h('div', { class: 'settings-modal' }, [
+           // 头部
+           h('div', { class: 'settings-header' }, [
+             h('h2', {}, '设置'),
+             h('button', {
+               class: 'close-btn',
+               'aria-label': '关闭',
+               onClick: handleClose
+             }, [
+               h('span', {}, '×')
+             ])
+           ]),
+           
+           // 主体区域（标签页 + 内容）
+           h('div', { class: 'settings-body' }, [
+             // 标签页导航
+             h('div', { class: 'settings-tabs' }, 
+               tabs.map((tab, index) => 
+                 h('button', {
+                   key: tab.key,
+                   class: ['tab-btn', { active: activeTab.value === index }],
+                   onClick: () => { activeTab.value = index; }
+                 }, tab.name)
+               )
+             ),
+             
+             // 内容区域
+             h('div', { class: 'settings-content' }, [
+               activeTab.value === 0 ? renderGeneralTab() :
+               activeTab.value === 1 ? renderConfigTab() :
+               renderVoiceTab()
+             ])
+           ]),
+           
+           // 底部按钮
+           h('div', { class: 'settings-footer' }, [
+             h('button', {
+               class: 'btn-primary',
+               onClick: handleConfirm
+             }, '保存')
+           ])
+         ])
       ]);
     };
   }
