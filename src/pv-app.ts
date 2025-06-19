@@ -22,7 +22,7 @@ import './macro-api-client.js';
 import './pv-button.js';
 import './pv-character-input.js';
 import './pv-functions-bar.js';
-import './pv-setting-panel.js';
+import './vue-settings/index.js';
 import './pv-suggestion-stripe.js';
 import './pv-textarea-wrapper.js';
 
@@ -53,7 +53,7 @@ import {MacroApiClient} from './macro-api-client.js';
 import {pvAppStyle} from './pv-app-css.js';
 import type {CharacterSelectEvent} from './pv-expand-keypad.js';
 import type {PvFunctionsBar} from './pv-functions-bar.js';
-import type {PvSettingPanel} from './pv-setting-panel.js';
+import type {PvVueSettingPanel} from './vue-settings/index.js';
 import type {SuggestionSelectEvent} from './pv-suggestion-stripe.js';
 import type {PvTextareaWrapper} from './pv-textarea-wrapper.js';
 import {State} from './state.js';
@@ -190,8 +190,8 @@ export class PvAppElement extends SignalWatcher(LitElement) {
   @query('pv-functions-bar')
   functionsBar?: PvFunctionsBar;
 
-  @query('pv-setting-panel')
-  private settingPanel?: PvSettingPanel;
+      @query('pv-vue-setting-panel')
+    private settingPanel?: PvVueSettingPanel;
 
   @property({type: String, attribute: 'feature-locale'})
   locale = 'cn';
@@ -772,10 +772,10 @@ export class PvAppElement extends SignalWatcher(LitElement) {
         </div>
       </div>
 
-      <pv-setting-panel
+      <pv-vue-setting-panel
         .state=${this.stateInternal}
         @ok-click=${this.onOkClick}
-      ></pv-setting-panel>
+      ></pv-vue-setting-panel>
     `;
   }
 

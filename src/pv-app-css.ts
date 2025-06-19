@@ -271,7 +271,6 @@ export const pvAppStyle = css`
   /* 独立的功能按钮样式 */
   .function-buttons {
     position: absolute;
-    bottom: -18px;
     display: flex;
     justify-content: space-between;
     align-items: center;
