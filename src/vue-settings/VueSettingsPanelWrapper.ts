@@ -92,15 +92,15 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       color: #333;
     }
 
-          #vue-mount-point .settings-tabs {
-        display: flex;
-        flex-direction: column;
-        background: #f8f9fa;
-        border-right: 1px solid #e0e0e0;
-        border-bottom: none;
-        width: 180px;
-        min-width: 180px;
-      }
+    #vue-mount-point .settings-tabs {
+      display: flex;
+      flex-direction: column;
+      background: #f8f9fa;
+      border-right: 1px solid #e0e0e0;
+      border-bottom: none;
+      width: 100px;
+      min-width: 100px;
+    }
 
     #vue-mount-point .tab-btn {
       flex: none;
@@ -114,6 +114,7 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       transition: all 0.2s;
       text-align: left;
       border-bottom: 1px solid #e0e0e0;
+      border-right: 1px solid #e0e0e0;
     }
 
     #vue-mount-point .tab-btn:hover {
@@ -125,12 +126,7 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       background: rgba(111, 201, 255, 0.11);
       color: #2D85F0;
       font-weight: 600;
-    }
-
-    #vue-mount-point .settings-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
+      border-right: 3px solid #2D85F0;
     }
 
     #vue-mount-point .settings-body {
@@ -142,40 +138,41 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
     #vue-mount-point .settings-content {
       flex: 1;
       overflow-y: auto;
-      padding: 24px;
-    }
-    #vue-mount-point .settings-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
+      padding: 20px 16px;
     }
 
     #vue-mount-point .tab-panel {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     #vue-mount-point .setting-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      margin-bottom: 24px;
     }
 
     #vue-mount-point .setting-label {
       font-weight: 600;
-      color: #333;
-      font-size: 14px;
+      color: #333333;
+      font-size: 16px;
+      margin-bottom: 8px;
     }
 
     #vue-mount-point .setting-select,
     #vue-mount-point .setting-textarea {
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
+      padding: 12px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
       font-size: 14px;
       transition: border-color 0.2s;
       font-family: inherit;
+      background: white;
+      height: 44px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     #vue-mount-point .setting-select:focus,
@@ -183,6 +180,49 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       outline: none;
       border-color: #1976d2;
       box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+    }
+
+    #vue-mount-point .radio-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-left: 6px;
+    }
+
+    #vue-mount-point .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666666;
+    }
+
+    #vue-mount-point .radio-item input[type="radio"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #1976d2;
+      cursor: pointer;
+    }
+
+    #vue-mount-point .radio-text {
+      user-select: none;
+    }
+
+    #vue-mount-point .ai-title-container {
+      display: flex;
+      gap: 21px;
+      align-items: center;
+      margin-bottom: 8px;
+      margin-left: 12px;
+    }
+
+    #vue-mount-point .ai-mode-description {
+      font-size: 12px;
+      color: #999999;
+      line-height: 1.4;
+      white-space: nowrap;
+      margin-top: 2px;
     }
 
     #vue-mount-point .switch-group {
@@ -195,6 +235,8 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       cursor: pointer;
       transition: background-color 0.2s;
       position: relative;
+      font-size: 14px;
+      color: #333333;
     }
 
     #vue-mount-point .switch-group:hover {
@@ -209,10 +251,10 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
     }
 
     #vue-mount-point .switch-slider {
-      width: 48px;
-      height: 24px;
+      width: 32px;
+      height: 16px;
       background: #ccc;
-      border-radius: 12px;
+      border-radius: 8px;
       position: relative;
       transition: background 0.3s;
     }
@@ -220,8 +262,8 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
     #vue-mount-point .switch-slider::before {
       content: '';
       position: absolute;
-      width: 20px;
-      height: 20px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: white;
       top: 2px;
@@ -235,36 +277,145 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
     }
 
     #vue-mount-point .switch-input:checked + .switch-slider::before {
-      transform: translateX(24px);
+      transform: translateX(16px);
     }
 
-    #vue-mount-point .setting-range {
+
+
+    #vue-mount-point .setting-range-inline::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #1976d2;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      border: 2px solid white;
+    }
+
+    #vue-mount-point .setting-range-inline::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #1976d2;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    #vue-mount-point .setting-range-inline::-webkit-slider-track {
+      height: 4px;
+      border-radius: 2px;
+      background: #e0e0e0;
+    }
+
+    #vue-mount-point .setting-range-inline::-moz-range-track {
+      height: 4px;
+      border-radius: 2px;
+      background: #e0e0e0;
+      border: none;
+    }
+
+    /* TTS语音选项样式 */
+    #vue-mount-point .voice-option-group {
+      margin-top: 16px;
+      margin-bottom: 32px;
+    }
+
+    #vue-mount-point .voice-option-row {
+      display: flex;
+      gap: 30px;
+    }
+
+    #vue-mount-point .voice-option-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100px;
+      height: 40px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      background: white;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    #vue-mount-point .voice-option-item:hover {
+      border-color: #2D85F0;
+      background: rgba(45, 133, 240, 0.1);
+    }
+
+    #vue-mount-point .voice-option-item input[type="radio"]:checked + .voice-option-text {
+      color: #2D85F0;
+      font-weight: 600;
+    }
+
+    #vue-mount-point .voice-option-item:has(input[type="radio"]:checked) {
+      border-color: #2D85F0;
+      background: rgba(45, 133, 240, 0.1);
+    }
+
+    #vue-mount-point .voice-option-item input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    #vue-mount-point .voice-option-text {
+      font-size: 16px;
+      color: #333333;
+      user-select: none;
+      cursor: pointer;
+      font-weight: 400;
+    }
+
+    /* 语音设置特定样式 */
+    #vue-mount-point .range-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    #vue-mount-point .range-group:first-of-type {
+      margin-top: 0px;
+    }
+
+    #vue-mount-point .range-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
       width: 100%;
-      height: 6px;
-      border-radius: 3px;
+    }
+
+    #vue-mount-point .range-label-text {
+      font-size: 16px;
+      color: #333333;
+      font-weight: 600;
+      min-width: 48px;
+      flex-shrink: 0;
+    }
+
+    #vue-mount-point .range-value {
+      font-size: 16px;
+      color: #1976d2;
+      font-weight: 600;
+      min-width: 40px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    #vue-mount-point .setting-range-inline {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
       background: #e0e0e0;
       outline: none;
       appearance: none;
-    }
-
-    #vue-mount-point .setting-range::-webkit-slider-thumb {
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #1976d2;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    #vue-mount-point .setting-range::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #1976d2;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      margin: 0;
+      box-sizing: border-box;
     }
 
     #vue-mount-point .settings-footer {

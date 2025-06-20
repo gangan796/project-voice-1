@@ -91,8 +91,11 @@ export default defineComponent({
         settings.persona = props.state.persona || '';
         settings.initialPhrases = [...(props.state.initialPhrases || [])];
         settings.voiceName = props.state.voiceName || '';
-        settings.voiceSpeakingRate = props.state.voiceSpeakingRate || 0;
-        settings.voicePitch = props.state.voicePitch || 0;
+        // 默认值设为0%
+        settings.voiceSpeakingRate = props.state.voiceSpeakingRate !== undefined ? 
+          Math.max(0, Math.min(100, props.state.voiceSpeakingRate * 5 + 50)) : 0;
+        settings.voicePitch = props.state.voicePitch !== undefined ? 
+          Math.max(0, Math.min(100, props.state.voicePitch * 5 + 50)) : 0;
       }
     };
 
@@ -178,30 +181,54 @@ export default defineComponent({
       return h('div', { class: 'tab-panel' }, [
         // AI模式设置
         h('div', { class: 'setting-group' }, [
-          h('label', { class: 'setting-label' }, 'AI模式'),
-          h('select', {
-            class: 'setting-select',
-            value: settings.aiConfig,
-            onChange: (e: Event) => {
-              settings.aiConfig = (e.target as HTMLSelectElement).value as 'fast' | 'smart' | 'classic';
-            }
-          }, [
-            h('option', { value: 'fast' }, '快速'),
-            h('option', { value: 'smart' }, '智能'),
-            h('option', { value: 'classic' }, '经典')
+          h('div', { class: 'ai-title-container' }, [
+            h('label', { class: 'setting-label' }, 'AI性能'),
+            h('div', { class: 'ai-mode-description' }, '推荐经典模式，调整为智能模式会对模型速度有影响。')
+          ]),
+          h('div', { class: 'radio-group' }, [
+              h('label', { class: 'radio-item' }, [
+                h('input', {
+                  type: 'radio',
+                  name: 'aiConfig',
+                  value: 'fast',
+                  checked: settings.aiConfig === 'fast',
+                  onChange: () => { settings.aiConfig = 'fast'; }
+                }),
+                h('span', { class: 'radio-text' }, '快速模式')
+              ]),
+              h('label', { class: 'radio-item' }, [
+                h('input', {
+                  type: 'radio',
+                  name: 'aiConfig',
+                  value: 'smart',
+                  checked: settings.aiConfig === 'smart',
+                  onChange: () => { settings.aiConfig = 'smart'; }
+                }),
+                h('span', { class: 'radio-text' }, '智能模式')
+              ]),
+              h('label', { class: 'radio-item' }, [
+                h('input', {
+                  type: 'radio',
+                  name: 'aiConfig',
+                  value: 'classic',
+                  checked: settings.aiConfig === 'classic',
+                  onChange: () => { settings.aiConfig = 'classic'; }
+                }),
+                              h('span', { class: 'radio-text' }, '经典模式')
+            ])
           ])
         ]),
         
-        // 总是在原点展开
+        // 启用提示音
         h('div', { class: 'setting-group' }, [
           h('label', { class: 'switch-group' }, [
-            h('span', {}, '总是在原点展开'),
+            h('span', {}, '启用音效'),
             h('input', {
               type: 'checkbox',
               class: 'switch-input',
-              checked: settings.expandAtOrigin,
+              checked: settings.enableEarcons,
               onChange: (e: Event) => {
-                settings.expandAtOrigin = (e.target as HTMLInputElement).checked;
+                settings.enableEarcons = (e.target as HTMLInputElement).checked;
               }
             }),
             h('span', { class: 'switch-slider' })
@@ -211,29 +238,13 @@ export default defineComponent({
         // 使用较小句子边距
         h('div', { class: 'setting-group' }, [
           h('label', { class: 'switch-group' }, [
-            h('span', {}, '使用较小句子边距'),
+            h('span', {}, '缩小句距'),
             h('input', {
               type: 'checkbox',
               class: 'switch-input',
               checked: settings.sentenceSmallMargin,
               onChange: (e: Event) => {
                 settings.sentenceSmallMargin = (e.target as HTMLInputElement).checked;
-              }
-            }),
-            h('span', { class: 'switch-slider' })
-          ])
-        ]),
-        
-        // 启用提示音
-        h('div', { class: 'setting-group' }, [
-          h('label', { class: 'switch-group' }, [
-            h('span', {}, '启用提示音'),
-            h('input', {
-              type: 'checkbox',
-              class: 'switch-input',
-              checked: settings.enableEarcons,
-              onChange: (e: Event) => {
-                settings.enableEarcons = (e.target as HTMLInputElement).checked;
               }
             }),
             h('span', { class: 'switch-slider' })
@@ -285,48 +296,72 @@ export default defineComponent({
         // TTS语音
         h('div', { class: 'setting-group' }, [
           h('label', { class: 'setting-label' }, 'TTS语音'),
-          h('select', {
-            class: 'setting-select',
-            value: settings.voiceName,
-            onChange: (e: Event) => {
-              settings.voiceName = (e.target as HTMLSelectElement).value;
-            }
-          }, [
-            h('option', { value: '' }, '默认'),
-            ...availableVoices.value.map(voice => 
-              h('option', { key: voice.name, value: voice.name }, voice.name)
-            )
+          h('div', { class: 'voice-option-group' }, [
+            h('div', { class: 'voice-option-row' }, [
+              h('div', { 
+                class: ['voice-option-item', { selected: settings.voiceName === 'female' || settings.voiceName === '' }],
+                onClick: () => { settings.voiceName = 'female'; }
+              }, [
+                h('input', {
+                  type: 'radio',
+                  name: 'voiceType',
+                  value: 'female',
+                  checked: settings.voiceName === 'female' || settings.voiceName === '',
+                  onChange: () => { settings.voiceName = 'female'; }
+                }),
+                h('span', { class: 'voice-option-text' }, '女声')
+              ]),
+              h('div', { 
+                class: ['voice-option-item', { selected: settings.voiceName === 'male' }],
+                onClick: () => { settings.voiceName = 'male'; }
+              }, [
+                h('input', {
+                  type: 'radio',
+                  name: 'voiceType',
+                  value: 'male',
+                  checked: settings.voiceName === 'male',
+                  onChange: () => { settings.voiceName = 'male'; }
+                }),
+                h('span', { class: 'voice-option-text' }, '男声')
+              ])
+            ])
           ])
         ]),
         
         // 语速
-        h('div', { class: 'setting-group' }, [
-          h('label', { class: 'setting-label' }, `语速: ${settings.voiceSpeakingRate}`),
-          h('input', {
-            type: 'range',
-            min: -10,
-            max: 10,
-            class: 'setting-range',
-            value: settings.voiceSpeakingRate,
-            onInput: (e: Event) => {
-              settings.voiceSpeakingRate = parseInt((e.target as HTMLInputElement).value);
-            }
-          })
+        h('div', { class: 'range-group' }, [
+          h('div', { class: 'range-container' }, [
+            h('span', { class: 'range-label-text' }, '语速'),
+            h('input', {
+              type: 'range',
+              min: 0,
+              max: 100,
+              class: 'setting-range-inline',
+              value: settings.voiceSpeakingRate,
+              onInput: (e: Event) => {
+                settings.voiceSpeakingRate = parseInt((e.target as HTMLInputElement).value);
+              }
+            }),
+            h('span', { class: 'range-value' }, `${settings.voiceSpeakingRate}%`)
+          ])
         ]),
         
         // 音调
-        h('div', { class: 'setting-group' }, [
-          h('label', { class: 'setting-label' }, `音调: ${settings.voicePitch}`),
-          h('input', {
-            type: 'range',
-            min: -10,
-            max: 10,
-            class: 'setting-range',
-            value: settings.voicePitch,
-            onInput: (e: Event) => {
-              settings.voicePitch = parseInt((e.target as HTMLInputElement).value);
-            }
-          })
+        h('div', { class: 'range-group' }, [
+          h('div', { class: 'range-container' }, [
+            h('span', { class: 'range-label-text' }, '音量'),
+            h('input', {
+              type: 'range',
+              min: 0,
+              max: 100,
+              class: 'setting-range-inline',
+              value: settings.voicePitch,
+              onInput: (e: Event) => {
+                settings.voicePitch = parseInt((e.target as HTMLInputElement).value);
+              }
+            }),
+            h('span', { class: 'range-value' }, `${settings.voicePitch}%`)
+          ])
         ])
       ]);
     };
