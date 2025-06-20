@@ -33,7 +33,8 @@ export class PvButtonElement extends LitElement {
     :host([active]) button,
     button:focus,
     button:hover {
-      background: var(--color-primary, yellow);
+      background: #2D85F0; /* 深蓝色背景 */
+      color: white; /* 白色字体 */
     }
 
     :host([rounded]) button {
@@ -46,14 +47,25 @@ export class PvButtonElement extends LitElement {
     }
 
     button {
-      background: var(--color-surface, white);
-      border-radius: 0.5vh;
-      border: solid 3px #8ab4f8;
-      color: var(--color-on-surface);
+      background: #E3F2FD; /* 浅蓝色背景 */
+      border-radius: 0.8rem; /* 稍小的圆角 */
+      border: solid 0.15rem #90CAF9; /* 稍细的浅蓝色边框 */
+      color: #333; /* 深色字体 */
       cursor: pointer;
       font-family: 'Roboto Mono', 'Noto Sans JP', monospace;
-      font-size: min(5vh, 3rem);
-      padding: 0 1rem;
+      font-size: 48px; /* 字号48 */
+      padding: 0.5rem 1rem; /* 减小内边距 */
+      height: 5.5vh; /* 稍小的按钮高度 */
+      max-height: 5.5vh; /* 限制最大高度 */
+      min-width: 3rem; /* 响应式最小宽度 */
+      display: flex; /* flex布局 */
+      align-items: center; /* 垂直居中 */
+      justify-content: center; /* 水平居中 */
+      box-sizing: border-box; /* 包含边框和内边距 */
+      overflow: hidden; /* 隐藏溢出内容 */
+      text-overflow: ellipsis; /* 显示省略号 */
+      white-space: nowrap; /* 不换行 */
+      transition: all 0.2s ease; /* 添加过渡动画 */
     }
   `;
   render() {

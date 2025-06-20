@@ -1,5 +1,5 @@
 # Build based on node slim
-FROM dockerproxy.com/library/node:18
+FROM node:18
 
 # Set network interface binding to make the server listen on all interfaces
 # This is needed to make the server accessible from outside the container.
@@ -21,7 +21,7 @@ RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
 # Install Node.js dependencies and run build script
-RUN npm install && npm run build
+RUN npm install && NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 EXPOSE 5000
 

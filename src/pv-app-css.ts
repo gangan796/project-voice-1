@@ -22,8 +22,8 @@ export const pvAppStyle = css`
   /* Update: 2024-07-30T13:00:00Z - Complete UI Layout Update with fixed overflow */
   :host {
     display: flex;
-    width: 1920px; /* 全局宽度 */
-    height: 1080px; /* 全局高度 */
+    width: 100vw; /* 占满浏览器视窗宽度 */
+    height: 100vh; /* 占满浏览器视窗高度 */
     overflow: hidden; /* 防止内容溢出导致滚动条 */
   }
 
@@ -40,21 +40,21 @@ export const pvAppStyle = css`
   .right-panel {
     display: flex;
     flex-direction: column;
-    padding: 25px; /* 面板内边距 */
+    padding: 20px 25px; /* 上下20px，左右25px，与中间面板对齐 */
     background-color: var(--color-surface, white); /* 可选背景色 */
     border-radius: 20px; /* 面板圆角 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 面板阴影 */
   }
 
   .left-panel {
-    width: 597px; /* 左侧面板宽度 */
+    width: 25vw; /* 左侧面板占视窗宽度的25% */
     align-items: center; /* 内部元素居中对齐 */
     justify-content: flex-start;
     /*gap: 20px;  九宫格与候选字/词的间距，这里设置的是子元素的间距，会被下面的margin-top覆盖一部分 */
   }
 
   .center-panel {
-    flex: 1; /* 占据剩余空间 */
+    width: 74vw; /* 中间面板占视窗宽度的74% */
     display: flex;
     flex-direction: column;
     justify-content: space-between; /* 联想句子与输入框上下对齐 */
@@ -62,10 +62,11 @@ export const pvAppStyle = css`
     background-color: var(--color-surface, white);
     border-radius: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* 确保内容不溢出 */
   }
 
   .right-panel {
-    width: 16px; /* 调整宽度使其整体左移 */
+    width: 1vw; /* 右侧面板占视窗宽度的1% */
     align-items: center;
     justify-content: flex-start;
     /*padding: 10px;  减小内边距 */
@@ -85,14 +86,16 @@ export const pvAppStyle = css`
   }
 
   .keypad {
-    width: 597px; /* 九宫格总宽度 */
+    width: 90%; /* 响应式宽度，占左侧面板的90% */
+    max-width: 597px; /* 保持最大宽度限制 */
     margin-inline: auto; /* 居中显示 */
     margin-bottom: 22.5px; /* 九宫格与下方元素的间距 */
   }
 
   /* 九宫格中的单个按钮样式 */
   pv-character-input div.key-group div.key-button {
-    width: 165px; /* 按钮宽度 */
+    width: 100%; /* 响应式按钮宽度，占满网格单元 */
+    min-width: 120px; /* 最小宽度保证可用性 */
     height: 148px; /* 按钮高度 */
     border-radius: 30px; /* 按钮圆角 */
     margin-bottom: 20px; /* 按钮之间垂直间距 */
@@ -104,11 +107,11 @@ export const pvAppStyle = css`
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(3, 165px); /* 3列，每列按钮宽度165px */
+    grid-template-columns: repeat(3, 1fr); /* 3列，响应式等宽 */
     grid-template-rows: repeat(4, 1fr); /* 4行，让按钮自己撑开高度 */
     gap: 11px 21px; /* 垂直间距11px，水平间距21px */
-    width: 597px; /* 精确计算网格总宽度 */
-    max-width: 100%; /* 防止超出父容器 */
+    width: 90%; /* 响应式宽度，占左侧面板的90% */
+    max-width: 597px; /* 保持最大宽度限制 */
     min-height: calc(4 * 82px + 3 * 11px); /* 确保有足够高度显示4行 */
     height: 414px; /* 整个联想字词区域的高度 */
     margin-inline: auto; /* 居中显示 */
@@ -149,7 +152,8 @@ export const pvAppStyle = css`
 
   /* 删除按钮样式 */
   .key-group pv-button.character.delete {
-    width: 344px; /* 删除按钮宽度 */
+    width: 90%; /* 响应式删除按钮宽度 */
+    max-width: 344px; /* 保持最大宽度限制 */
     height: 103px; /* 删除按钮高度 */
   }
 
@@ -157,8 +161,8 @@ export const pvAppStyle = css`
   .suggestions {
     flex: 1; /* 占据中间面板上方大部分空间 */
     position: relative;
-    overflow-y: auto; /* 允许滚动 */
-    width: 100%;
+    overflow: hidden; /* 隐藏溢出内容 */
+    width: 100%; /* 占满中间面板宽度 */
     margin-bottom: 28px; /* 与输入框的间距 */
   }
 
@@ -168,43 +172,42 @@ export const pvAppStyle = css`
     padding: 0;
     display: flex;
     flex-direction: column; /* 竖直排列 */
-    gap: 17px; /* 句子行间距 */
+    gap: 1.5rem; /* 响应式句子行间距 */
   }
 
   ul.sentence-suggestions li {
-    height: 96px; /* 句子行高 */
-    min-height: 96px; /* 确保最小高度 */
-    border-radius: 12px; /* 句子圆角 */
+    height: 10vh; /* 增加句子行高以容纳按钮 */
+    min-height: 10vh; /* 确保最小高度 */
+    border-radius: 1.2rem; /* 响应式句子圆角 */
     font-size: 48px; /* 字体大小 */
     display: flex;
     align-items: center;
-    padding: 20px; /* 内边距 */
+    padding: 1rem 1.5rem; /* 调整内边距：上下1rem，左右1.5rem */
     box-sizing: border-box;
     white-space: nowrap; /* 不换行 */
     overflow: hidden; /* 隐藏溢出 */
     text-overflow: ellipsis; /* 显示省略号 */
-    background: #e0f2f7; /* 句子背景色 */
-    border: 1px solid #a7d9f7; /* 句子边框 */
+    background: white; /* 改为白色背景 */
+    border: 0.1rem solid #ddd; /* 响应式浅灰色边框 */
     cursor: pointer;
+    width: 100%; /* 占满容器宽度 */
   }
   
   /* 确保 pv-suggestion-stripe 及其内部元素正确显示和截断 */
   ul.sentence-suggestions li pv-suggestion-stripe {
-    display: flex; /* 让pv-suggestion-stripe内部的pv-button水平排列 */
-    overflow: hidden; /* 隐藏pv-suggestion-stripe内部的溢出内容 */
-    text-overflow: ellipsis; /* 显示省略号 */
-    white-space: nowrap; /* 不换行 */
-    width: 100%; /* 填充li的宽度 */
-    height: 100%; /* 填充li的高度 */
+    display: flex; /* 改回flex布局，便于按钮对齐 */
     align-items: center; /* 垂直居中 */
+    overflow: hidden; /* 隐藏溢出内容 */
+    width: 100%; /* 填充li的宽度 */
+    height: 8vh; /* 明确设置高度 */
+    min-height: 8vh; /* 确保最小高度 */
   }
   
   ul.sentence-suggestions li pv-suggestion-stripe pv-button {
-    margin-right: 5px; /* pv-button之间的间距，根据需要调整 */
-    flex-shrink: 0; /* 防止pv-button被压缩 */
-    overflow: hidden; /* 确保pv-button内部文本也能截断 */
-    text-overflow: ellipsis; /* 确保pv-button内部文本也能截断 */
-    white-space: nowrap; /* 确保pv-button内部文本也能截断 */
+    flex-shrink: 0; /* 防止按钮被压缩 */
+    margin-right: 1rem; /* 响应式按钮间距 */
+    height: 5.5vh; /* 响应式按钮高度 */
+    max-height: 5.5vh; /* 限制最大高度 */
   }
 
   .sentence-placeholder {
@@ -214,10 +217,10 @@ export const pvAppStyle = css`
 
   /* 输入框区域样式 */
   .input-area {
-    width: 100%;
+    width: 100%; /* 占满中间面板宽度，与联想句子对齐 */
     height: 307px; /* 输入框高度 */
-    max-width: 1130px; /* 输入框最大宽度 */
-    align-self: center; /* 在center-panel中居中 */
+    max-width: none; /* 移除最大宽度限制，让输入框与联想句子对齐 */
+    align-self: stretch; /* 拉伸到容器宽度 */
     position: relative;
   }
 
@@ -274,30 +277,32 @@ export const pvAppStyle = css`
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%; /* 占满容器宽度 */
+    bottom: 0; /* 贴底显示 */
+    left: 0;
+    right: 0;
   }
 
   .function-buttons button {
-    border: 2px solid #c6e2ff;
-    /* border-radius: 20px; */
+    border: 0.15rem solid #c6e2ff; /* 响应式边框 */
     background: white;
-    font-size: 24px;
+    font-size: 1.5rem; /* 响应式字体 */
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
-    /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); 添加阴影使按钮更突出 */
+    flex: 1; /* 等宽占满容器 */
+    height: 4vh; /* 响应式高度 */
+    min-height: 50px; /* 最小高度保证可用性 */
+    box-sizing: border-box;
   }
 
   .function-buttons button:first-child {
-    width: 565px;
-    height: 65px;
-    border-radius: 0 0 0 25px;
+    border-radius: 0 0 0 1.5rem; /* 响应式圆角 */
     border-right: none;
   }
 
   .function-buttons button:last-child {
-    width: 565px;
-    height: 65px;
-    border-radius: 0 0 25px 0;
+    border-radius: 0 0 1.5rem 0; /* 响应式圆角 */
     border-left: none;
   }
 
@@ -308,7 +313,7 @@ export const pvAppStyle = css`
 
   .function-buttons button:active {
     background: #e6f3ff;
-    transform: translateY(1px);
+    transform: translateY(0.05rem); /* 响应式移动距离 */
   }
   /* 功能按钮图标样式 */
   .fb-icon {

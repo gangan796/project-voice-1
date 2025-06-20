@@ -74,7 +74,11 @@ export class PvSuggestionStripeElement extends LitElement {
   static styles = css`
     :host {
       -ms-overflow-style: none;
-      display: block;
+      display: flex; /* 改回flex布局 */
+      align-items: center; /* 垂直居中 */
+      width: 100%;
+      height: 100%; /* 占满父容器高度 */
+      overflow: hidden; /* 确保组件内容不溢出 */
     }
 
     :host::-webkit-scrollbar {
@@ -83,11 +87,13 @@ export class PvSuggestionStripeElement extends LitElement {
 
     pv-button {
       margin-right: 0.5rem;
+      flex-shrink: 0; /* 防止按钮被压缩 */
     }
 
     .ellipsis {
       font-family: 'Roboto Mono', monospace;
-      font-size: 5vh;
+      font-size: 3rem; /* 响应式省略号字体大小 */
+      flex-shrink: 0; /* 防止省略号被压缩 */
     }
   `;
 
