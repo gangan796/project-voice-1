@@ -484,6 +484,17 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
   }
 
   /**
+   * 属性更新时重新创建Vue应用
+   */
+  updated(changedProperties: Map<string | number | symbol, unknown>) {
+    if (changedProperties.has('state') && this.vueApp && this.vueComponent) {
+      // 重新创建Vue应用以确保状态正确传递
+      this.vueApp.unmount();
+      this.createVueApp();
+    }
+  }
+
+  /**
    * 组件首次更新后创建Vue应用
    */
   protected firstUpdated(): void {
@@ -500,60 +511,38 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
     try {
       // 创建Vue应用
       this.vueApp = createApp(SettingsPanel, {
-        state: this.state
+        state: this.state,
+        'onOk-click': (data: any) => {
+          this.dispatchEvent(new CustomEvent('ok-click', {
+            detail: data,
+            bubbles: true,
+            composed: true
+          }));
+        },
+        'onCancel-click': () => {
+          this.dispatchEvent(new CustomEvent('cancel-click', {
+            bubbles: true,
+            composed: true
+          }));
+        },
+        'onSettings-change': (data: any) => {
+          this.dispatchEvent(new CustomEvent('settings-change', {
+            detail: data,
+            bubbles: true,
+            composed: true
+          }));
+        }
       });
 
       // 挂载Vue组件
       this.vueComponent = this.vueApp.mount(mountPoint);
-
-      // 监听Vue组件事件
-      this.setupEventListeners();
 
     } catch (error) {
       console.error('创建Vue应用失败:', error);
     }
   }
 
-  /**
-   * 设置事件监听器
-   */
-  private setupEventListeners(): void {
-    if (!this.vueComponent) return;
 
-    // Vue 3 不再有 $on 方法，我们直接在组件实例上监听事件
-    // 这里我们通过修改Vue组件的emit来重定向事件
-    const originalEmit = this.vueComponent.emit || this.vueComponent.$emit;
-    if (originalEmit) {
-      this.vueComponent.emit = this.vueComponent.$emit = (event: string, ...args: any[]) => {
-        // 先调用原始的emit
-        originalEmit.call(this.vueComponent, event, ...args);
-        
-        // 然后转发到Lit Element
-        switch (event) {
-          case 'ok-click':
-            this.dispatchEvent(new CustomEvent('ok-click', {
-              detail: args[0],
-              bubbles: true,
-              composed: true
-            }));
-            break;
-          case 'cancel-click':
-            this.dispatchEvent(new CustomEvent('cancel-click', {
-              bubbles: true,
-              composed: true
-            }));
-            break;
-          case 'settings-change':
-            this.dispatchEvent(new CustomEvent('settings-change', {
-              detail: args[0],
-              bubbles: true,
-              composed: true
-            }));
-            break;
-        }
-      };
-    }
-  }
 
   /**
    * 显示设置面板

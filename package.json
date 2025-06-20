@@ -7,10 +7,10 @@
     "serve": "python main.py",
     "lint": "tsc --noEmit && gts lint && python -m yapf --diff --style yapf main.py macro.py",
     "clean": "gts clean",
-    "build": "npm run build:i18n && npm run build:storybook && esbuild src/index.ts --bundle --minify --outfile=static/index.js",
+    "build": "npm run build:i18n && npm run build:storybook && esbuild src/index.ts --bundle --minify --outfile=static/index.js --define:__VUE_OPTIONS_API__=true --define:__VUE_PROD_DEVTOOLS__=false --define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false",
     "build:i18n": "lit-localize build",
     "build:storybook": "storybook build",
-    "watch": "npm run build:i18n && esbuild src/index.ts --bundle --watch --define:process.env.NODE_ENV=\\\"development\\\" --outfile=static/index.js",
+    "watch": "npm run build:i18n && esbuild src/index.ts --bundle --watch --define:process.env.NODE_ENV=\\\"development\\\" --define:__VUE_OPTIONS_API__=true --define:__VUE_PROD_DEVTOOLS__=true --define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false --outfile=static/index.js",
     "fix": "gts fix && python -m yapf -i --style yapf main.py macro.py",
     "pretest": "esbuild src/tests/test_index.ts --bundle --outfile=spec/test_bundle.js",
     "test": "jasmine-browser-runner runSpecs",
@@ -53,6 +53,7 @@
     "@material/web": "^2.3.0",
     "lit": "^3.3.0",
     "signal-polyfill": "^0.2.2",
-    "simhash-js": "github:beketa/simhash-js"
+    "simhash-js": "github:beketa/simhash-js",
+    "vue": "^3.4.0"
   }
 }

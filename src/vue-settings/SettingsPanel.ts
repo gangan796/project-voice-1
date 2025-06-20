@@ -84,18 +84,18 @@ export default defineComponent({
     const loadSettingsFromState = (): void => {
       if (props.state) {
         const aiConfig = props.state.aiConfig as 'fast' | 'smart' | 'classic';
-        settings.aiConfig = aiConfig && ['fast', 'smart', 'classic'].includes(aiConfig) ? aiConfig : 'smart';
+        settings.aiConfig = aiConfig && ['fast', 'smart', 'classic'].includes(aiConfig) ? aiConfig : 'classic';
         settings.expandAtOrigin = props.state.expandAtOrigin || false;
         settings.sentenceSmallMargin = props.state.sentenceSmallMargin || false;
         settings.enableEarcons = props.state.enableEarcons || false;
         settings.persona = props.state.persona || '';
         settings.initialPhrases = [...(props.state.initialPhrases || [])];
         settings.voiceName = props.state.voiceName || '';
-        // 默认值设为0%
+        // 将-10到10的范围转换为0-100
         settings.voiceSpeakingRate = props.state.voiceSpeakingRate !== undefined ? 
-          Math.max(0, Math.min(100, props.state.voiceSpeakingRate * 5 + 50)) : 0;
+          Math.max(0, Math.min(100, props.state.voiceSpeakingRate * 5 + 50)) : 50;
         settings.voicePitch = props.state.voicePitch !== undefined ? 
-          Math.max(0, Math.min(100, props.state.voicePitch * 5 + 50)) : 0;
+          Math.max(0, Math.min(100, props.state.voicePitch * 5 + 50)) : 50;
       }
     };
 
@@ -151,6 +151,19 @@ export default defineComponent({
       settings,
       (newSettings) => {
         emit('settings-change', { ...newSettings });
+      },
+      { deep: true }
+    );
+
+    /**
+     * 监听props.state变化，重新加载设置
+     */
+    watch(
+      () => props.state,
+      (newState) => {
+        if (newState) {
+          loadSettingsFromState();
+        }
       },
       { deep: true }
     );

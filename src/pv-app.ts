@@ -428,7 +428,44 @@ export class PvAppElement extends SignalWatcher(LitElement) {
   private onKeypadHandlerClick() {}
 
   // TODO: Call this event handler whenever the dialog is closed.
-  private onOkClick() {
+  private onOkClick(e: CustomEvent) {
+    // 处理设置数据保存
+    if (e.detail && typeof e.detail === 'object') {
+      const settingsData = e.detail;
+      
+      // 更新状态中的设置数据
+      if (settingsData.aiConfig !== undefined) {
+        this.state.aiConfig = settingsData.aiConfig;
+      }
+      if (settingsData.expandAtOrigin !== undefined) {
+        this.state.expandAtOrigin = settingsData.expandAtOrigin;
+      }
+      if (settingsData.sentenceSmallMargin !== undefined) {
+        this.state.sentenceSmallMargin = settingsData.sentenceSmallMargin;
+      }
+      if (settingsData.enableEarcons !== undefined) {
+        this.state.enableEarcons = settingsData.enableEarcons;
+      }
+      if (settingsData.persona !== undefined) {
+        this.state.persona = settingsData.persona;
+      }
+      if (settingsData.initialPhrases !== undefined) {
+        this.state.initialPhrases = [...settingsData.initialPhrases];
+      }
+      if (settingsData.voiceName !== undefined) {
+        this.state.voiceName = settingsData.voiceName;
+      }
+      if (settingsData.voiceSpeakingRate !== undefined) {
+        // 将0-100的值转换回-10到10的范围
+        this.state.voiceSpeakingRate = (settingsData.voiceSpeakingRate - 50) / 5;
+      }
+      if (settingsData.voicePitch !== undefined) {
+        // 将0-100的值转换回-10到10的范围  
+        this.state.voicePitch = (settingsData.voicePitch - 50) / 5;
+      }
+    }
+
+    // 处理语言检查逻辑
     const index = this.state.checkedLanguages.findIndex(
       label => LANGUAGES[label] === this.state.lang,
     );
