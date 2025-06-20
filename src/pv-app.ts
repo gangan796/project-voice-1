@@ -57,6 +57,7 @@ import type {PvVueSettingPanel} from './vue-settings/index.js';
 import type {SuggestionSelectEvent} from './pv-suggestion-stripe.js';
 import type {PvTextareaWrapper} from './pv-textarea-wrapper.js';
 import {State} from './state.js';
+import {HistoryManager} from './history-manager.js';
 
 const URL_PARAMS = {
   SENTENCE_MACRO_ID: 'sentenceMacroId',
@@ -527,7 +528,8 @@ export class PvAppElement extends SignalWatcher(LitElement) {
       // 清除前先保存到历史记录
       const currentText = this.textField.value;
       if (currentText && currentText.trim().length > 0) {
-        this.saveToHistory(currentText.trim());
+        const historyManager = HistoryManager.getInstance();
+        historyManager.saveToHistory(currentText.trim());
       }
       this.textField.textDelete();
     }
@@ -538,157 +540,16 @@ export class PvAppElement extends SignalWatcher(LitElement) {
    */
   @playClickSound()
   private handleHistoryButtonClick() {
-    // 获取历史记录
-    const history = this.getInputHistory();
-    
-    if (history.length === 0) {
-      console.log('暂无历史记录');
-      return;
-    }
-    
-    // 显示历史记录选择界面
-    this.showHistoryDialog(history);
-  }
-
-  /**
-   * 获取输入历史记录
-   */
-  private getInputHistory(): string[] {
-    try {
-      const stored = localStorage.getItem('input_history');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('读取历史记录失败:', error);
-      return [];
-    }
-  }
-
-  /**
-   * 保存输入历史记录
-   */
-  private saveToHistory(text: string) {
-    if (!text || text.trim().length === 0) return;
-    
-    try {
-      const history = this.getInputHistory();
-      const trimmedText = text.trim();
-      
-      // 如果已存在相同记录，先移除
-      const index = history.indexOf(trimmedText);
-      if (index !== -1) {
-        history.splice(index, 1);
-      }
-      
-      // 添加到开头
-      history.unshift(trimmedText);
-      
-      // 限制历史记录数量为20条
-      if (history.length > 20) {
-        history.splice(20);
-      }
-      
-      localStorage.setItem('input_history', JSON.stringify(history));
-    } catch (error) {
-      console.error('保存历史记录失败:', error);
-    }
-  }
-
-  /**
-   * 显示历史记录选择对话框
-   */
-  private showHistoryDialog(history: string[]) {
-    const dialog = document.createElement('div');
-    dialog.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    `;
-    
-    const content = document.createElement('div');
-    content.style.cssText = `
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 600px;
-      max-height: 400px;
-      overflow-y: auto;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    `;
-    
-    const title = document.createElement('h3');
-    title.textContent = '历史记录';
-    title.style.cssText = 'margin-top: 0; margin-bottom: 15px; color: #333;';
-    content.appendChild(title);
-    
-    const list = document.createElement('div');
-    list.style.cssText = 'margin-bottom: 15px;';
-    
-    history.forEach((item, index) => {
-      const historyItem = document.createElement('div');
-      historyItem.style.cssText = `
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        cursor: pointer;
-        transition: background 0.2s;
-        word-break: break-all;
-      `;
-      historyItem.textContent = item;
-      
-      historyItem.addEventListener('mouseenter', () => {
-        historyItem.style.background = '#f0f8ff';
-      });
-      
-      historyItem.addEventListener('mouseleave', () => {
-        historyItem.style.background = 'white';
-      });
-      
-      historyItem.addEventListener('click', () => {
-        if (this.textField) {
-          this.textField.setTextFieldValue(item, []);
-          this.updateSuggestions();
-        }
-        document.body.removeChild(dialog);
-      });
-      
-      list.appendChild(historyItem);
-    });
-    
-    content.appendChild(list);
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '关闭';
-    closeBtn.style.cssText = `
-      background: #f5f5f5;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 8px 16px;
-      cursor: pointer;
-      float: right;
-    `;
-    closeBtn.addEventListener('click', () => {
-      document.body.removeChild(dialog);
-    });
-    
-    content.appendChild(closeBtn);
-    dialog.appendChild(content);
-    document.body.appendChild(dialog);
-    
-    // 点击背景关闭
-    dialog.addEventListener('click', (e) => {
-      if (e.target === dialog) {
-        document.body.removeChild(dialog);
+    const historyManager = HistoryManager.getInstance();
+    historyManager.showHistoryDialog((selectedText: string) => {
+      if (this.textField && selectedText) {
+        this.textField.setTextFieldValue(selectedText, []);
+        this.updateSuggestions();
       }
     });
   }
+
+  
 
   protected render() {
     const words = this.isBlank()
