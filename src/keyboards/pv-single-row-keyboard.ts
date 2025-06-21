@@ -254,7 +254,8 @@ export class PvAlphanumericNineKeyKeyboard extends LitElement {
     }
     .key-btn {
       background: #fff;
-      border: 2px solid #c6e2ff;
+      border: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       border-radius: 30px; /* 九宫格按钮圆角 */
       font-size: 1.2rem;
       height: 148px; /* 占满网格单元格高度 */
@@ -271,7 +272,8 @@ export class PvAlphanumericNineKeyKeyboard extends LitElement {
     }
     .delete-btn {
       background: #fff;
-      border: 2px solid #c6e2ff;
+      border: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       border-radius: 30px; /* 删除按钮圆角 */
       font-size: 1.2rem;
       height: 103px; /* 删除按钮高度 */
@@ -282,13 +284,28 @@ export class PvAlphanumericNineKeyKeyboard extends LitElement {
       font-weight: bold;
       cursor: pointer;
       transition: background 0.2s;
+      gap: 0.4vw; /* 响应式图标与文字之间的间距 */
+    }
+    .delete-btn img {
+      width: 2.4vw; /* 响应式图标宽度 */
+      height: 10vh; /* 响应式图标高度 */
+      object-fit: contain; /* 保持图标比例 */
+      min-width: 16px; /* 最小宽度保证可用性 */
+      min-height: 16px; /* 最小高度保证可用性 */
+      max-width: 70px; /* 最大宽度限制 */
+      max-height: 70px; /* 最大高度限制 */
+    }
+    .delete-btn:hover {
+      background: var(--color-primary, yellow);
+      color: #333;
     }
     .delete-btn:active {
       background: #e3f2fd;
     }
     .punctuation-key-btn {
       background: #fff;
-      border: 2px solid #c6e2ff;
+      border: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       border-radius: 30px; /* 标点符号按钮圆角 */
       font-size: 1.2rem;
       height: 103px; /* 标点符号按钮高度 */
@@ -348,7 +365,8 @@ export class PvAlphanumericNineKeyKeyboard extends LitElement {
             class="key-btn delete-btn"
             @click=${() => this._onKeyClick(DELETE_KEY.value[0])}
           >
-            <span class="delete-icon">✖</span> 删除
+            <img src="/static/icon/delete.png" alt="删除" />
+            删除
           </button>
         </div>
       </div>

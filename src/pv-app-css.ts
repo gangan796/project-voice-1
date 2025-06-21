@@ -30,10 +30,8 @@ export const pvAppStyle = css`
   .container {
     box-sizing: border-box;
     display: flex;
-    padding: 10px; /* 容器内边距 */
     width: 100%;
     height: 100%;
-    gap: 5px; /* 减小中间与右侧面板之间的间距 */
   }
 
   .left-panel,
@@ -41,7 +39,7 @@ export const pvAppStyle = css`
     display: flex;
     flex-direction: column;
     padding: 20px 25px; /* 上下20px，左右25px，与中间面板对齐 */
-    background-color: var(--color-surface, white); /* 可选背景色 */
+    background-color: #EDF1FA
     border-radius: 20px; /* 面板圆角 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 面板阴影 */
   }
@@ -58,7 +56,6 @@ export const pvAppStyle = css`
     display: flex;
     flex-direction: column;
     justify-content: space-between; /* 联想句子与输入框上下对齐 */
-    padding: 20px; /* 中间面板内边距 */
     background-color: var(--color-surface, white);
     border-radius: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -137,7 +134,7 @@ export const pvAppStyle = css`
     background: #fff;
     border: 2px solid #c6e2ff;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: normal;
     transition: background 0.2s;
   }
   .candidate-btn:active {

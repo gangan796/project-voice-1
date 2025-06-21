@@ -172,6 +172,8 @@ export class HistoryManager {
     content.appendChild(emptyMessage);
     
     const closeBtn = this.createButton('关闭', () => {
+      // 确保在关闭空历史记录对话框时隐藏悬浮提示框
+      this.hideHoverTooltip();
       document.body.removeChild(dialog);
     });
     content.appendChild(closeBtn);
@@ -191,10 +193,14 @@ export class HistoryManager {
     
     // 标题栏
     const header = this.createHeader('历史记录', () => {
+      // 确保在关闭对话框时隐藏悬浮提示框
+      this.hideHoverTooltip();
       document.body.removeChild(dialog);
     }, () => {
       // 全部清空功能
       this.clearHistory();
+      // 确保在清空历史记录后隐藏悬浮提示框
+      this.hideHoverTooltip();
       document.body.removeChild(dialog);
     });
     content.appendChild(header);
@@ -210,6 +216,8 @@ export class HistoryManager {
     
     // 历史记录列表
     const list = this.createHistoryList(history, (text) => {
+      // 确保在选择历史记录时隐藏悬浮提示框
+      this.hideHoverTooltip();
       if (onSelect) {
         onSelect(text);
       }
@@ -232,6 +240,8 @@ export class HistoryManager {
     
     // 底部按钮
     const footer = this.createFooter(() => {
+      // 确保在通过底部按钮关闭对话框时隐藏悬浮提示框
+      this.hideHoverTooltip();
       document.body.removeChild(dialog);
     });
     content.appendChild(footer);
@@ -562,6 +572,8 @@ export class HistoryManager {
     // 点击背景关闭
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) {
+        // 确保在点击背景关闭对话框时隐藏悬浮提示框
+        this.hideHoverTooltip();
         document.body.removeChild(dialog);
       }
     });
@@ -569,6 +581,8 @@ export class HistoryManager {
     // ESC键关闭
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // 确保在ESC键关闭对话框时隐藏悬浮提示框
+        this.hideHoverTooltip();
         document.body.removeChild(dialog);
         document.removeEventListener('keydown', handleKeyDown);
       }

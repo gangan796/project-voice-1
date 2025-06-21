@@ -61,8 +61,6 @@ export class PvFunctionsBar extends SignalWatcher(LitElement) {
     }
 
     .functions-bar {
-      background: var(--color-secondary);
-      border-radius: 10rem;
       display: flex;
       flex-direction: column;
       padding: 0.5rem;
@@ -70,6 +68,8 @@ export class PvFunctionsBar extends SignalWatcher(LitElement) {
 
     .functions-bar md-icon {
       font-weight: 300;
+      font-size: 3rem;
+      height: 100%;
     }
 
     .functions-bar button {
@@ -81,8 +81,8 @@ export class PvFunctionsBar extends SignalWatcher(LitElement) {
       display: flex;
       flex-direction: column;
       font-family: inherit;
-      margin: 0.60rem 0;
-      padding: 0;
+      margin: 1vh 0;
+
     }
 
     .functions-bar button md-icon img {
@@ -92,8 +92,9 @@ export class PvFunctionsBar extends SignalWatcher(LitElement) {
 
     .functions-bar button span {
       display: none;
-      font-size: 0.75rem;
+      font-size: 1.5rem;
       font-weight: 500;
+      margin: 0.5vh 0;
     }
 
     .functions-bar button:hover md-icon {
