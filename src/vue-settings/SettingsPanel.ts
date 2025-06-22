@@ -21,6 +21,7 @@ export default defineComponent({
      */
     const isVisible = ref(false);
     const activeTab = ref(0);
+    const activeConfigInput = ref<'persona' | 'phrases'>('persona');
 
     /**
      * 设置数据
@@ -47,7 +48,7 @@ export default defineComponent({
      */
     const tabs: TabInfo[] = [
       { name: '通用设置', key: 'general' },
-      { name: '配置设置', key: 'config' },
+      { name: '个性定制', key: 'config' },
       { name: '语音设置', key: 'voice' }
     ];
 
@@ -271,33 +272,46 @@ export default defineComponent({
      */
     const renderConfigTab = () => {
       return h('div', { class: 'tab-panel' }, [
-        // 角色设定
-        h('div', { class: 'setting-group' }, [
-          h('label', { class: 'setting-label' }, '角色设定'),
-          h('textarea', {
-            class: 'setting-textarea',
-            rows: 4,
-            placeholder: '输入角色设定...',
-            value: settings.persona,
-            onInput: (e: Event) => {
-              settings.persona = (e.target as HTMLTextAreaElement).value;
-            }
-          })
+        // 切换按钮
+        h('div', { class: 'config-switch-buttons' }, [
+          h('button', {
+            class: ['config-switch-btn', { active: activeConfigInput.value === 'persona' }],
+            onClick: () => { activeConfigInput.value = 'persona'; }
+          }, '输入偏好'),
+          h('button', {
+            class: ['config-switch-btn', { active: activeConfigInput.value === 'phrases' }],
+            onClick: () => { activeConfigInput.value = 'phrases'; }
+          }, '初始短语')
         ]),
         
-        // 初始短语
-        h('div', { class: 'setting-group' }, [
-          h('label', { class: 'setting-label' }, '初始短语（每行一个）'),
-          h('textarea', {
-            class: 'setting-textarea',
-            rows: 3,
-            placeholder: '每行一个短语...',
-            value: phrasesText.value,
-            onInput: (e: Event) => {
-              phrasesText.value = (e.target as HTMLTextAreaElement).value;
-            }
-          })
-        ])
+        // 根据选中的按钮显示对应的输入框
+        activeConfigInput.value === 'persona' ?
+          // 角色设定
+          h('div', { class: 'setting-group' }, [
+            h('label', { class: 'setting-label' }, '角色设定'),
+            h('textarea', {
+              class: 'setting-textarea',
+              rows: 6,
+              placeholder: '输入角色设定...',
+              value: settings.persona,
+              onInput: (e: Event) => {
+                settings.persona = (e.target as HTMLTextAreaElement).value;
+              }
+            })
+          ]) :
+          // 初始短语
+          h('div', { class: 'setting-group' }, [
+            h('label', { class: 'setting-label' }, '初始短语（每行一个）'),
+            h('textarea', {
+              class: 'setting-textarea',
+              rows: 6,
+              placeholder: '每行一个短语...',
+              value: phrasesText.value,
+              onInput: (e: Event) => {
+                phrasesText.value = (e.target as HTMLTextAreaElement).value;
+              }
+            })
+          ])
       ]);
     };
 

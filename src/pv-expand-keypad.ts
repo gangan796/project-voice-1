@@ -83,9 +83,10 @@ export class PvExpandKeypadElement extends LitElement {
 
   private onKeydownWhileOpenWithThis = this.onKeydownWhileOpen.bind(this);
   private resizeObserver?: ResizeObserver;
+  private closeTimeout?: number;
 
   static styles = css`
-    button {
+    button.handler {
       align-items: center;
       aspect-ratio: 1;
       background: var(--color-surface, white);
@@ -108,8 +109,9 @@ export class PvExpandKeypadElement extends LitElement {
       height: 103px;
     }
 
-    button:hover,
-    button:focus {
+    button.handler:hover,
+    button.handler:focus,
+    :host([open]) button.handler {
       background: var(--color-primary, yellow);
       color: white;
     }
@@ -130,40 +132,74 @@ export class PvExpandKeypadElement extends LitElement {
       position: absolute;
       top: 0;
       z-index: 1000;
+      background: rgba(0, 0, 0, 0.73); /* #000000 透明度73% */
+      height: 11.67vh; /* 指定高度 */
+      border-radius: 20px; /* 圆角 */
+      padding: 0 3rem; /* 左右内边距增加空间 */
     }
 
     :host([open]) .keypad-popup {
-      display: block;
+      display: flex; /* flex布局居中 */
+      align-items: center; /* 垂直居中 */
+      justify-content: center; /* 水平居中 */
     }
 
     ul.container {
       display: flex;
-      gap: 0.5rem;
+      gap: 3rem; /* 进一步扩大按钮之间的间距 */
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      align-items: center;
     }
 
     ul.row {
       display: flex;
       flex-direction: row;
-      gap: 0.5rem;
+      gap: 1.5rem; /* 进一步扩大按钮间水平间距 */
+      margin: 0;
+      padding: 0;
     }
 
-    ul button {
+    :host([open]) .keypad-popup ul.container button,
+    :host([open]) .keypad-popup ul.row button {
       /* margin-bottom is not needed for horizontal layout */
+      background: transparent !important; /* 透明背景 */
+      border: none !important; /* 去掉边框 */
+      color: #C0C4CF !important; /* 未选中字体颜色 */
+      font-size: 4.6875rem !important; /* 未选中字号 */
+      transition: all 0.3s ease !important; /* 过渡动画 */
+      box-shadow: none !important; /* 去掉阴影 */
+      border-radius: 0 !important; /* 去掉圆角 */
+      min-width: auto !important; /* 自动宽度 */
+      width: auto !important; /* 自动宽度 */
+      height: auto !important; /* 自动高度 */
+      aspect-ratio: unset !important; /* 取消宽高比限制 */
+      max-width: none !important; /* 取消最大宽度限制 */
+      font-family: inherit !important; /* 继承字体 */
+    }
+
+    :host([open]) .keypad-popup ul.container button:hover,
+    :host([open]) .keypad-popup ul.row button:hover {
+      background: transparent !important; /* 悬浮时保持透明背景 */
+      color: #FFFFFF !important; /* 选中后字体颜色 */
+      font-size: 6.25rem !important; /* 选中字号 */
+      transform: none !important; /* 不使用transform放大，用字号变化 */
+      box-shadow: none !important; /* 不要阴影效果 */
+    }
+
+    :host([open]) .keypad-popup ul.container button:focus,
+    :host([open]) .keypad-popup ul.row button:focus {
+      background: transparent !important; /* 焦点时也保持透明背景 */
+      color: #C0C4CF !important; /* 焦点时保持未选中颜色 */
+      font-size: 4.6875rem !important; /* 焦点时保持未选中字号 */
+      transform: none !important; /* 焦点时不放大，避免默认悬浮效果 */
+      box-shadow: none !important; /* 不要阴影效果 */
+      outline: none !important; /* 去掉焦点轮廓 */
     }
 
     .backdrop {
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      height: 100%;
-      left: 0;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 100;
-    }
-
-    :host([open]) .backdrop {
-      display: block;
+      display: none !important; /* 完全隐藏背景遮罩 */
     }
   `;
 
@@ -231,6 +267,31 @@ export class PvExpandKeypadElement extends LitElement {
     this.handlerButton?.focus();
   }
 
+  /**
+   * 延迟关闭弹出区域，给用户时间移动鼠标
+   */
+  private scheduleClose() {
+    // 清除之前的延迟关闭
+    if (this.closeTimeout) {
+      window.clearTimeout(this.closeTimeout);
+    }
+    // 设置新的延迟关闭
+    this.closeTimeout = window.setTimeout(() => {
+      this.open = false;
+      this.closeTimeout = undefined;
+    }, 150); // 150ms延迟，给用户足够时间但不会太长
+  }
+
+  /**
+   * 取消延迟关闭
+   */
+  private cancelClose() {
+    if (this.closeTimeout) {
+      window.clearTimeout(this.closeTimeout);
+      this.closeTimeout = undefined;
+    }
+  }
+
   protected firstUpdated() {
     this.resizeObserver = new ResizeObserver(() => {
       if (!this.handlerButton) return;
@@ -255,12 +316,17 @@ export class PvExpandKeypadElement extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this.resizeObserver?.disconnect();
+    // 清理延迟关闭timeout
+    if (this.closeTimeout) {
+      window.clearTimeout(this.closeTimeout);
+    }
   }
 
   protected render() {
     return html`<button
         class="handler"
-        @click="${() => {
+        @mouseenter="${() => {
+          this.cancelClose(); // 取消任何延迟关闭
           this.open = true;
           this.dispatchEvent(
             new CharacterSelectEvent('keypad-handler-click', {
@@ -270,10 +336,24 @@ export class PvExpandKeypadElement extends LitElement {
             }),
           );
         }}"
+        @mouseleave="${() => {
+          // 延迟关闭，给用户时间移动到弹出区域
+          this.scheduleClose();
+        }}"
       >
         ${this.label}
       </button>
-      <div class="keypad-popup">
+      <div class="keypad-popup"
+        @mouseenter="${() => {
+          // 鼠标进入弹出区域时取消关闭并保持打开状态
+          this.cancelClose();
+          this.open = true;
+        }}"
+        @mouseleave="${() => {
+          // 延迟关闭，给用户时间重新悬浮
+          this.scheduleClose();
+        }}"
+      >
         <ul class="container">
           ${this.value.map(
             (row) =>
@@ -303,12 +383,6 @@ export class PvExpandKeypadElement extends LitElement {
               </li>`
           )}
         </ul>
-      </div>
-      <div
-        class="backdrop"
-        @click="${() => {
-          this.open = false;
-        }}"
-      ></div>`;
+      </div>`;
   }
 }

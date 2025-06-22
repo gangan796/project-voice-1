@@ -170,7 +170,7 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
       transition: border-color 0.2s;
       font-family: inherit;
       background: white;
-      height: 44px;
+      height: 300px;
       width: 100%;
       box-sizing: border-box;
     }
@@ -476,6 +476,43 @@ export class PvVueSettingPanel extends LitElement implements VueSettingsPanelWra
 
     #vue-mount-point .settings-content::-webkit-scrollbar-thumb:hover {
       background: #a0a0a0;
+    }
+
+    /* 配置设置切换按钮样式 */
+    #vue-mount-point .config-switch-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    #vue-mount-point .config-switch-btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #vue-mount-point .config-switch-btn:hover {
+      border-color: #2D85F0;
+      color: #2D85F0;
+      background: rgba(45, 133, 240, 0.05);
+    }
+
+    #vue-mount-point .config-switch-btn.active {
+      background: #2D85F0;
+      color: white;
+      border-color: #2D85F0;
+    }
+
+    #vue-mount-point .config-switch-btn.active:hover {
+      background: #1976d2;
+      border-color: #1976d2;
     }
   `;
 

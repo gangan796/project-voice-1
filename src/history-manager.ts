@@ -191,6 +191,9 @@ export class HistoryManager {
     const dialog = this.createBaseDialog();
     const content = this.createDialogContent();
     
+    // 只显示最新的8条记录
+    const displayHistory = history.slice(0, 8);
+    
     // 标题栏
     const header = this.createHeader('历史记录', () => {
       // 确保在关闭对话框时隐藏悬浮提示框
@@ -209,13 +212,13 @@ export class HistoryManager {
     const listContainer = document.createElement('div');
     listContainer.style.cssText = `
       flex: 1;
-      overflow-y: auto;
+      overflow: hidden;
       padding: 0;
       margin: 0;
     `;
     
     // 历史记录列表
-    const list = this.createHistoryList(history, (text) => {
+    const list = this.createHistoryList(displayHistory, (text) => {
       // 确保在选择历史记录时隐藏悬浮提示框
       this.hideHoverTooltip();
       if (onSelect) {
@@ -301,8 +304,8 @@ export class HistoryManager {
     content.style.cssText = `
       background: white;
       border-radius: 8px;
-      width: 400px;
-      max-height: 480px;
+      width: 450px;
+      height: 860px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
       display: flex;
       flex-direction: column;
@@ -391,8 +394,9 @@ export class HistoryManager {
         color: #333;
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        min-height: 60px;
+        align-items: center;
+        height: 60px;
+        overflow: hidden;
       `;
       
       // 最后一项不显示分割线
@@ -407,16 +411,20 @@ export class HistoryManager {
         margin-right: 12px;
         display: flex;
         flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
       `;
       
       // 主文本
       const textElement = document.createElement('div');
       textElement.style.cssText = `
         font-size: 18px;
-        word-break: break-all;
         line-height: 1.3;
         color: #333;
         font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       `;
       textElement.textContent = item.text;
       
@@ -640,21 +648,21 @@ export class HistoryManager {
     const arrow = document.createElement('div');
     arrow.style.cssText = `
       position: absolute;
-      right: -10px;
+      right: -8px;
       top: 50%;
       transform: translateY(-50%);
       width: 0;
       height: 0;
-      border-left: 20px solid white;
-      border-top: 20px solid transparent;
-      border-bottom: 20px solid transparent;
+      border-left: 8px solid white;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
     `;
     
     // 创建箭头边框
     const arrowBorder = document.createElement('div');
     arrowBorder.style.cssText = `
       position: absolute;
-      right: -11px;
+      right: -9px;
       top: 50%;
       transform: translateY(-50%);
       width: 0;
@@ -673,17 +681,23 @@ export class HistoryManager {
     const rect = targetElement.getBoundingClientRect();
     const dialogRect = targetElement.closest('.history-dialog')?.getBoundingClientRect();
     
+    // 获取提示框的预计高度（需要先添加到DOM中才能准确计算）
+    document.body.appendChild(tooltipContainer);
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const tooltipHeight = tooltipRect.height;
+    
     if (dialogRect) {
-      // 箭头贴近对话框边框，280px宽度 + 1px间隙 = 281px
+      // 箭头贴近对话框边框
       tooltipContainer.style.left = `${dialogRect.left - 530}px`;
-      tooltipContainer.style.top = `${rect.top + (rect.height - 50) / 2}px`;
+      // 让提示框的箭头（中心）准确对齐历史记录项的中心
+      tooltipContainer.style.top = `${rect.top + (rect.height / 2) - (tooltipHeight / 2)}px`;
     } else {
       // 备用位置
       tooltipContainer.style.left = `${rect.left - 281}px`;
-      tooltipContainer.style.top = `${rect.top + (rect.height - 50) / 2}px`;
+      tooltipContainer.style.top = `${rect.top + (rect.height / 2) - (tooltipHeight / 2)}px`;
     }
     
-    document.body.appendChild(tooltipContainer);
+    // 已经在计算位置时添加过了，不需要重复添加
     this.currentTooltip = tooltipContainer;
   }
 
