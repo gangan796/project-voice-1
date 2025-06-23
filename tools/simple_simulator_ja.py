@@ -31,7 +31,7 @@ if parent_directory not in sys.path:  # Add parent directoy if it's not included
 import macro
 # --- macro imported ---
 
-SENTENCE_JA_MACRO_ID = 'SentenceJapanese20240628'
+SENTENCE_JA_MACRO_ID = 'SentenceGeneric20250311'
 WORD_JA_MACRO_ID = 'WordGeneric20240628'
 # MODEL_ID = 'gemini-1.5-flash-002'
 MODEL_ID = 'gemini-2.0-flash-001'

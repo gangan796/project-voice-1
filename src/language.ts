@@ -163,12 +163,12 @@ abstract class Chinese implements Language {
   aiConfigs = {
     classic: {
       model: 'gemma3:4b',
-      sentence: 'SentenceJapanese20240628',
+      sentence: 'SentenceGeneric20250311',
       word: 'WordGeneric20240628',
     },
     fast: {
       model: 'gemma3:4b',
-      sentence: 'SentenceJapanese20240628',
+      sentence: 'SentenceGeneric20250311',
       word: 'WordGeneric20240628',
     },
     smart: {
