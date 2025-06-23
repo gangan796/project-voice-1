@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+1. 浏览器的分辨率就是1920×1080
+2. 编写完成，最后一步记得执行npm run build
+3. 保持只针对设置界面编写，其他代码逻辑或CSS保持不动。
+
