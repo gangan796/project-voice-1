@@ -195,21 +195,14 @@ const handleKeyClick = async (value: string) => {
   if (value === 'DELETE') {
     const currentText = appStore.text
     if (currentText.length > 0) {
-      const deletedChar = currentText.charAt(currentText.length - 1)
       
       // 删除一个字符
       appStore.text = currentText.slice(0, -1)
       
       // 如果删除的字符是临时输入的一部分，更新临时输入状态
-      if (aiStore.hasTempInput && aiStore.tempInput.includes(deletedChar)) {
-        // 如果临时输入只有一个字符，清除临时输入状态
-        if (aiStore.tempInput.length === 1) {
-          aiStore.clearTempInput()
-        } else {
-          // 如果有多个字符，从临时输入中移除最后一个字符
-          const newTempInput = aiStore.tempInput.slice(0, -1)
-          aiStore.setTempInput(newTempInput)
-        }
+      if (aiStore.hasTempInput) {
+        // 减少临时输入长度
+        aiStore.tempInput -= 1
       }
     }
   }
@@ -224,7 +217,7 @@ const handleLetterClick = (letter: string) => {
   appStore.text = appStore.text + letter
   
   // 将字母累积到临时输入
-  aiStore.addTempChar(letter)
+  aiStore.addTempChar()
   
   hideDropdown()
   // 判断音效

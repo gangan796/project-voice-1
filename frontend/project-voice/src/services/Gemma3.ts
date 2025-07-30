@@ -40,6 +40,27 @@ class Gemma3 {
   }
 
   /**
+   * 过滤掉句子中以输入文本开头的部分
+   * @param sentence 原始句子
+   * @param inputText 输入文本
+   * @returns 过滤后的句子
+   */
+  private filterInputPrefix(sentence: string, inputText: string): string {
+    if (!inputText || !sentence) return sentence;
+    
+    // 去除首尾空格
+    const cleanInput = inputText.trim();
+    const cleanSentence = sentence.trim();
+    
+    // 如果句子以输入文本开头，则去掉这部分
+    if (cleanSentence.startsWith(cleanInput)) {
+      return cleanSentence.substring(cleanInput.length).trim();
+    }
+    
+    return cleanSentence;
+  }
+
+  /**
    * 获取辅助词和联想句子
    * @param text 输入文本
    * @returns Promise<FilteredResponse> 过滤后的响应数据
@@ -58,9 +79,22 @@ class Gemma3 {
     const rawData: ApiResponse = response.data;
     
     // 过滤掉序号前缀
+    const filteredWords = this.filterNumberPrefix(rawData.words);
+    const filteredSentences = this.filterNumberPrefix(rawData.sentences);
+    
+    // 过滤掉与输入文本重复的词汇
+    const uniqueWords = filteredWords.filter(word => word !== text && word.trim() !== text.trim());
+    
+    // 过滤掉句子中以输入文本开头的部分
+    const processedSentences = filteredSentences.map(sentence => 
+      this.filterInputPrefix(sentence, text)
+    ).filter(sentence => sentence.trim().length > 0); // 过滤掉空句子
+    
+    console.log('过滤前联想句子', filteredSentences);
+    console.log('过滤后联想句子', processedSentences);
     return {
-      words: this.filterNumberPrefix(rawData.words),
-      sentences: this.filterNumberPrefix(rawData.sentences)
+      words: uniqueWords,
+      sentences: processedSentences
     };
   };
 }

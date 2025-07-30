@@ -194,7 +194,7 @@
         }
 
         .team-member {
-            flex: 1;
+            flex: 0 0 40rem; 
             max-width: 40rem;
             display: flex;
             align-items: center;

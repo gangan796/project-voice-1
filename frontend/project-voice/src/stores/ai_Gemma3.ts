@@ -29,7 +29,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
   const inputHistory = ref<string[]>([])
   
   // 临时输入管理（九宫格键盘输入的字母）
-  const tempInput = ref<string>('')
+  const tempInput = ref<number>(0)
   const hasTempInput = ref<boolean>(false)
   
   // 防抖定时器
@@ -52,44 +52,38 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
   /**
    * 设置临时输入
    * @param text - 临时输入的文本
-   */
   const setTempInput = (text: string): void => {
     tempInput.value = text
     hasTempInput.value = text.length > 0
     console.log('[AI Store] 设置临时输入:', text)
-  }
+  }*/
   
   /**
-   * 添加临时输入字符
-   * @param char - 要添加的字符
+   * 根据字母输入来计算临时输入的长度
    */
-  const addTempChar = (char: string): void => {
-    tempInput.value += char
+  const addTempChar = (): void => {
+    tempInput.value += 1
     hasTempInput.value = true
-    console.log('[AI Store] 添加临时字符:', char, '总临时输入:', tempInput.value)
+    console.log('[AI Store] 总临时输入:', tempInput.value)
   }
   
   /**
    * 清除临时输入
    */
   const clearTempInput = (): void => {
-    if (hasTempInput.value && tempInput.value) {
-      // 从app store的文本中移除临时输入
-      const currentText = appStore.text
-      if (currentText.endsWith(tempInput.value)) {
-        appStore.text = currentText.slice(0, -tempInput.value.length)
-        console.log('[AI Store] 清除临时输入:', tempInput.value)
-      }
+    // 判断有无临时输入
+    if (hasTempInput.value) {
+      appStore.text = appStore.text.slice(0, -tempInput.value)
     }
     
-    tempInput.value = ''
+    tempInput.value = 0
     hasTempInput.value = false
   }
   
   /**
    * 添加文本并清除临时输入
    * @param text - 要添加的文本
-   */
+  */
   const addTextWithClearTemp = (text: string): void => {
     // 先清除临时输入
     clearTempInput()
@@ -164,7 +158,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
         for (let i = 0; i < uniqueWords.length; i += 11) {
           pages.push(uniqueWords.slice(i, i + 11))
         }
-        
+        /*
         // 确保至少有2页，最多3页
         if (pages.length === 0) {
           const defaultPage1 = ['我们', '你好', '什么', '可以', '现在', '今天', '没有', '知道', '这个', '那个', '怎么'];
@@ -175,7 +169,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
           pages.push(defaultPage2);
         } else if (pages.length > 3) {
           pages.splice(3);
-        }
+        }*/
         
         auxiliaryWordsPages.value = pages
         totalAuxiliaryPages.value = pages.length
@@ -186,6 +180,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       // 处理联想句子
       if (response.sentences && response.sentences.length > 0) {
         let sentences = [...response.sentences]
+        /*
         if (sentences.length < 4) {
           const defaultSentences = [
             '今天天气怎么样呢，感觉很不错',
@@ -194,7 +189,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
             '明天有什么计划吗，要不要出去'
           ]
           sentences = [...sentences, ...defaultSentences].slice(0, 4)
-        } else if (sentences.length > 4) {
+        } else*/ if (sentences.length > 4) {
           sentences = sentences.slice(0, 4)
         }
         
@@ -212,20 +207,12 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       suggestionSentencesError.value = errorMessage
       console.error('[AI Store] AI建议生成失败:', errorMessage)
       
-      // 降级到默认数据
-      const defaultPage1 = ['我们', '你好', '什么', '可以', '现在', '今天', '没有', '知道', '这个', '那个', '怎么']
-      const defaultPage2 = ['时候', '地方', '工作', '朋友', '家人', '生活', '感觉', '问题', '希望', '需要', '帮助']
-      auxiliaryWordsPages.value = [defaultPage1, defaultPage2]
-      totalAuxiliaryPages.value = 2
+      // 不再使用默认数据，保持空状态
+      auxiliaryWordsPages.value = []
+      totalAuxiliaryPages.value = 0
       currentAuxiliaryPage.value = 0
-      auxiliaryWords.value = defaultPage1
-      
-      suggestionSentences.value = [
-        '今天天气怎么样呢，感觉很不错',
-        '你好最近怎么样啊，工作还顺利',
-        '我们一起去吃饭吧，你想吃什么',
-        '明天有什么计划吗，要不要出去'
-      ]
+      auxiliaryWords.value = []
+      suggestionSentences.value = []
     } finally {
       auxiliaryWordsLoading.value = false
       suggestionSentencesLoading.value = false
@@ -360,7 +347,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
     clearAll,
     clearAiContent,
     retryFailedOperations,
-    setTempInput,
+    // setTempInput,
     addTempChar,
     clearTempInput,
     addTextWithClearTemp,
