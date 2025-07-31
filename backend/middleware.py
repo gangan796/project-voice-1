@@ -13,12 +13,130 @@ from typing import Dict, Any, Optional, List
 import logging
 import google.generativeai as genai
 from pydantic import BaseModel
+import time
+import threading
+from collections import defaultdict
+from functools import wraps
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# ================================
+# 请求限流和缓存配置
+# ================================
+
+# 请求限流配置
+REQUEST_RATE_LIMIT = {
+    "max_requests_per_minute": 15,  # 每分钟最多15个请求
+    "max_requests_per_second": 2,   # 每秒最多2个请求
+    "cooldown_after_429": 60        # 429错误后冷却60秒
+}
+
+# 全局限流状态
+request_tracker = defaultdict(list)  # 每个IP的请求时间记录
+last_429_time = 0  # 最后一次429错误的时间
+request_cache = {}  # 请求缓存
+cache_lock = threading.Lock()  # 缓存锁
+
+def rate_limit_decorator(f):
+    """
+    请求限流装饰器
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        client_ip = request.remote_addr or 'unknown'
+        current_time = time.time()
+        
+        # 检查是否在冷却期内
+        global last_429_time
+        if current_time - last_429_time < REQUEST_RATE_LIMIT["cooldown_after_429"]:
+            logger.warning(f"在冷却期内，拒绝请求 - IP: {client_ip}")
+            return jsonify({
+                "error": "API正在冷却中，请稍后再试",
+                "retry_after": int(REQUEST_RATE_LIMIT["cooldown_after_429"] - (current_time - last_429_time))
+            }), 429
+        
+        # 清理过期的请求记录（超过1分钟的）
+        request_tracker[client_ip] = [
+            req_time for req_time in request_tracker[client_ip] 
+            if current_time - req_time < 60
+        ]
+        
+        # 检查每分钟请求数
+        if len(request_tracker[client_ip]) >= REQUEST_RATE_LIMIT["max_requests_per_minute"]:
+            logger.warning(f"每分钟请求数超限 - IP: {client_ip}, 请求数: {len(request_tracker[client_ip])}")
+            return jsonify({
+                "error": "请求过于频繁，请稍后再试",
+                "retry_after": 60
+            }), 429
+        
+        # 检查每秒请求数
+        recent_requests = [
+            req_time for req_time in request_tracker[client_ip] 
+            if current_time - req_time < 1
+        ]
+        if len(recent_requests) >= REQUEST_RATE_LIMIT["max_requests_per_second"]:
+            logger.warning(f"每秒请求数超限 - IP: {client_ip}")
+            return jsonify({
+                "error": "请求过于频繁，请稍后再试",
+                "retry_after": 1
+            }), 429
+        
+        # 记录本次请求时间
+        request_tracker[client_ip].append(current_time)
+        
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            # 如果是429错误，更新冷却时间
+            if "429" in str(e) or "quota" in str(e).lower():
+                last_429_time = current_time
+                logger.error(f"API配额超限，启动冷却机制")
+            raise
+    
+    return decorated_function
+
+def get_cache_key(text: str, input_preference: Optional[str] = None) -> str:
+    """
+    生成缓存键
+    """
+    return f"{text}_{input_preference or 'none'}"
+
+def get_cached_response(cache_key: str) -> Optional[Dict[str, Any]]:
+    """
+    获取缓存的响应
+    """
+    with cache_lock:
+        if cache_key in request_cache:
+            cached_data, timestamp = request_cache[cache_key]
+            # 缓存有效期5分钟
+            if time.time() - timestamp < 300:
+                logger.info(f"使用缓存响应: {cache_key}")
+                return cached_data
+            else:
+                # 删除过期缓存
+                del request_cache[cache_key]
+    return None
+
+def set_cached_response(cache_key: str, response_data: Dict[str, Any]) -> None:
+    """
+    设置缓存响应
+    """
+    with cache_lock:
+        request_cache[cache_key] = (response_data, time.time())
+        
+        # 限制缓存大小，最多保留50个
+        if len(request_cache) > 50:
+            # 删除最旧的10个缓存
+            oldest_keys = sorted(
+                request_cache.keys(), 
+                key=lambda k: request_cache[k][1]
+            )[:10]
+            for key in oldest_keys:
+                del request_cache[key]
 
 # ================================
 # 配置变量 - 请根据实际情况修改
@@ -530,6 +648,7 @@ def call_local_gemini(contents: str) -> Dict[str, Any]:
 # ================================
 
 @app.route('/api/complete', methods=['POST'])
+@rate_limit_decorator
 def complete_text():
     """
     文本智能补全API接口
@@ -553,6 +672,12 @@ def complete_text():
             
         logger.info(f"收到补全请求 - 文本: '{text}', 偏好: '{input_preference}', 测试模式: {IS_TEST_MODE}")
         
+        # 检查缓存
+        cache_key = get_cache_key(text, input_preference)
+        cached_result = get_cached_response(cache_key)
+        if cached_result:
+            return jsonify(cached_result)
+        
         # 根据测试模式选择处理方式
         if IS_TEST_MODE:
             # 测试模式：返回假数据
@@ -562,11 +687,24 @@ def complete_text():
             # 生产模式：调用Gemini模型
             logger.info("使用生产模式，调用Gemini模型")
             result = call_gemini_model(text, input_preference)
-            
+        
+        # 缓存结果
+        set_cached_response(cache_key, result)
+        
         return jsonify(result)
         
     except Exception as e:
         logger.error(f"处理请求时发生错误: {e}")
+        
+        # 如果是429错误，更新全局冷却时间
+        if "429" in str(e) or "quota" in str(e).lower():
+            global last_429_time
+            last_429_time = time.time()
+            return jsonify({
+                "error": "API配额超限，请稍后再试",
+                "retry_after": REQUEST_RATE_LIMIT["cooldown_after_429"]
+            }), 429
+        
         return jsonify({"error": f"服务器内部错误: {str(e)}"}), 500
 
 @app.route('/api/health', methods=['GET'])

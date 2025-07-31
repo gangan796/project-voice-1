@@ -72,6 +72,13 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
   // 防抖定时器
   let debounceTimer: number | null = null
   
+  // 请求限流相关状态
+  let isRequestPending = false // 当前是否有请求正在进行
+  let lastRequestTime = 0 // 上次请求时间
+  const MIN_REQUEST_INTERVAL = 2000 // 最小请求间隔 2秒
+  const requestCache = new Map<string, { data: any, timestamp: number }>() // 请求缓存
+  const CACHE_DURATION = 30000 // 缓存有效期 30秒
+  
   /**
    * 计算属性：是否有任何加载状态
    */
@@ -164,6 +171,41 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
   }
   
   /**
+   * 检查缓存是否有效
+   * @param text 输入文本
+   * @returns 缓存的数据或null
+   */
+  const getCachedData = (text: string) => {
+    const cached = requestCache.get(text)
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      console.log('[AI Store] 使用缓存数据:', text)
+      return cached.data
+    }
+    return null
+  }
+
+  /**
+   * 设置缓存数据
+   * @param text 输入文本
+   * @param data 响应数据
+   */
+  const setCachedData = (text: string, data: any) => {
+    requestCache.set(text, {
+      data,
+      timestamp: Date.now()
+    })
+    
+    // 清理过期缓存，最多保留20个
+    if (requestCache.size > 20) {
+      const entries = Array.from(requestCache.entries())
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
+      for (let i = 0; i < 5; i++) {
+        requestCache.delete(entries[i][0])
+      }
+    }
+  }
+
+  /**
    * 生成AI建议（单次调用获取所有数据）
    * @param text - 输入文本
    */
@@ -171,6 +213,35 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
     if (!text.trim()) {
       resetAuxiliaryPages()
       suggestionSentences.value = []
+      return
+    }
+    
+    // 检查是否有正在进行的请求
+    if (isRequestPending) {
+      console.log('[AI Store] 有请求正在进行中，跳过此次请求')
+      return
+    }
+    
+    // 检查请求时间间隔
+    const now = Date.now()
+    if (now - lastRequestTime < MIN_REQUEST_INTERVAL) {
+      console.log('[AI Store] 请求过于频繁，跳过此次请求')
+      return
+    }
+    
+    // 检查缓存
+    const cachedData = getCachedData(text)
+    if (cachedData) {
+      // 使用缓存数据
+      auxiliaryWordsPages.value = cachedData.auxiliaryWordsPages
+      totalAuxiliaryPages.value = cachedData.totalAuxiliaryPages
+      currentAuxiliaryPage.value = 0
+      auxiliaryWords.value = cachedData.auxiliaryWordsPages[0] || []
+      suggestionSentences.value = cachedData.suggestionSentences
+      auxiliaryWordsError.value = null
+      suggestionSentencesError.value = null
+      auxiliaryWordsLoading.value = false
+      suggestionSentencesLoading.value = false
       return
     }
     
@@ -195,6 +266,10 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       return
     }
     
+    // 设置请求状态和时间
+    isRequestPending = true
+    lastRequestTime = now
+    
     // 设置加载状态
     auxiliaryWordsLoading.value = true
     suggestionSentencesLoading.value = true
@@ -205,6 +280,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       const response = await gemma3Service.getWords(text)
       
       // 处理辅助词
+      let pages: string[][] = []
       if (response.words && response.words.length > 0) {
         // 使用 Set 去重，并排除与输入内容相同的词
         const uniqueWords = [...new Set(response.words)].filter(
@@ -212,22 +288,9 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
         );
         
         // 将词汇分页，每页11个
-        const pages: string[][] = []
         for (let i = 0; i < uniqueWords.length; i += 11) {
           pages.push(uniqueWords.slice(i, i + 11))
         }
-        /*
-        // 确保至少有2页，最多3页
-        if (pages.length === 0) {
-          const defaultPage1 = ['我们', '你好', '什么', '可以', '现在', '今天', '没有', '知道', '这个', '那个', '怎么'];
-          const defaultPage2 = ['时候', '地方', '工作', '朋友', '家人', '生活', '感觉', '问题', '希望', '需要', '帮助'];
-          pages.push(defaultPage1, defaultPage2);
-        } else if (pages.length === 1) {
-          const defaultPage2 = ['时候', '地方', '工作', '朋友', '家人', '生活', '感觉', '问题', '希望', '需要', '帮助'];
-          pages.push(defaultPage2);
-        } else if (pages.length > 3) {
-          pages.splice(3);
-        }*/
         
         auxiliaryWordsPages.value = pages
         totalAuxiliaryPages.value = pages.length
@@ -236,23 +299,22 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       }
       
       // 处理联想句子
+      let sentences: string[] = []
       if (response.sentences && response.sentences.length > 0) {
-        let sentences = [...response.sentences]
-        /*
-        if (sentences.length < 4) {
-          const defaultSentences = [
-            '今天天气怎么样呢，感觉很不错',
-            '你好最近怎么样啊，工作还顺利',
-            '我们一起去吃饭吧，你想吃什么',
-            '明天有什么计划吗，要不要出去'
-          ]
-          sentences = [...sentences, ...defaultSentences].slice(0, 4)
-        } else*/ if (sentences.length > 4) {
+        sentences = [...response.sentences]
+        if (sentences.length > 4) {
           sentences = sentences.slice(0, 4)
         }
         
         suggestionSentences.value = sentences
       }
+      
+      // 缓存结果
+      setCachedData(text, {
+        auxiliaryWordsPages: pages,
+        totalAuxiliaryPages: pages.length,
+        suggestionSentences: sentences
+      })
       
       console.log('[AI Store] AI建议生成成功:', {
         wordsCount: response.words?.length || 0,
@@ -265,6 +327,12 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       suggestionSentencesError.value = errorMessage
       console.error('[AI Store] AI建议生成失败:', errorMessage)
       
+      // 如果是429错误（配额超限），延长限流时间
+      if (errorMessage.includes('429') || errorMessage.includes('quota')) {
+        console.log('[AI Store] API配额超限，延长限流时间')
+        lastRequestTime = now + 30000 // 额外等待30秒  
+      }
+      
       // 不再使用默认数据，保持空状态
       auxiliaryWordsPages.value = []
       totalAuxiliaryPages.value = 0
@@ -274,6 +342,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
     } finally {
       auxiliaryWordsLoading.value = false
       suggestionSentencesLoading.value = false
+      isRequestPending = false
     }
   }
   
