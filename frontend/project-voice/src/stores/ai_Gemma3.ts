@@ -2,6 +2,43 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { gemma3Service } from '@/services/Gemma3'
+import sensitiveWordsData from '@/assets/prompt.json'
+
+/**
+ * 检测文本中是否包含敏感词
+ * @param text 待检测的文本
+ * @returns 是否包含敏感词
+ */
+const containsSensitiveWords = (text: string): boolean => {
+  if (!text || !text.trim()) return false
+  
+  const lowerText = text.toLowerCase()
+  
+  // 遍历所有敏感词约束
+  for (const constraint of sensitiveWordsData.constraints) {
+    for (const word of constraint.words) {
+      if (lowerText.includes(word.toLowerCase())) {
+        console.log(`[敏感词检测] 发现敏感词: "${word}" (类型: ${constraint.type})`)
+        return true
+      }
+    }
+  }
+  
+  return false
+}
+
+/**
+ * 生成安全提示句子
+ * @returns 安全提示句子数组
+ */
+const generateSafePromptSentences = (): string[] => {
+  return [
+    '请输入适当的内容，我们支持健康积极的交流',
+    '为了营造良好的使用环境，请避免敏感内容',
+    '让我们一起创造正面积极的对话体验',
+    '建议您选择其他话题进行输入和交流'
+  ]
+}
 
 /**
  * AI状态管理Store
@@ -137,6 +174,27 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       return
     }
     
+    // 敏感词检测 - 如果包含敏感词，不调用API，直接显示提示
+    if (containsSensitiveWords(text)) {
+      console.log('[AI Store] 检测到敏感词，不调用API，显示安全提示')
+      
+      // 清空辅助词
+      resetAuxiliaryPages()
+      
+      // 显示安全提示句子
+      suggestionSentences.value = generateSafePromptSentences()
+      
+      // 设置错误信息提示用户
+      auxiliaryWordsError.value = '输入包含敏感内容，请修改后重试'
+      suggestionSentencesError.value = null
+      
+      // 不设置加载状态，直接返回
+      auxiliaryWordsLoading.value = false
+      suggestionSentencesLoading.value = false
+      
+      return
+    }
+    
     // 设置加载状态
     auxiliaryWordsLoading.value = true
     suggestionSentencesLoading.value = true
@@ -257,6 +315,12 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
     // 清除之前的定时器
     if (debounceTimer) {
       window.clearTimeout(debounceTimer)
+    }
+    
+    // 如果包含敏感词，立即处理，不等防抖
+    if (containsSensitiveWords(text)) {
+      generateBothSuggestions(text)
+      return
     }
     
     // 设置新的防抖定时器

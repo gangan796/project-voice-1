@@ -40,15 +40,20 @@ class Gemma3 {
   }
 
   /**
-   * 过滤输入文本，只保留中文字符
+   * 过滤输入文本，只保留中文字符和中文标点符号
    * @param inputText 原始输入文本
-   * @returns 过滤后的文本（只保留中文字符）
+   * @returns 过滤后的文本（只保留中文字符和中文标点符号）
    */
   private filterInputText(inputText: string): string {
     if (!inputText) return '';
     
-    // 使用正则表达式匹配中文字符（包括中文标点符号）
-    const chineseRegex = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/g;
+    // 使用正则表达式匹配中文字符和中文标点符号
+    // \u4e00-\u9fff: 中日韩统一表意文字
+    // \u3400-\u4dbf: 中日韩统一表意文字扩展A
+    // \uf900-\ufaff: 中日韩兼容表意文字
+    // \u3000-\u303f: 中日韩符号和标点
+    // \uff00-\uffef: 全角ASCII、全角标点符号、半角片假名、全角片假名、半角韩文字母
+    const chineseRegex = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3000-\u303f\uff00-\uffef]/g;
     const chineseChars = inputText.match(chineseRegex);
     
     return chineseChars ? chineseChars.join('') : '';
