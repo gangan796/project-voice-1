@@ -29,7 +29,7 @@ IS_TEST_MODE = False
 
 # API模型配置 - Ollama Gemma3配置
 API_CONFIG = {
-    "api_key": "AIzaSyBZOa8jMZsM7KlnJcgNX4dQZvsRNsbobp8",  # Ollama不需要API密钥
+    "api_key": "AIzaSyACHTcUJp68ZH0MvBc8Pbp00b9cq50uPa4",  # Ollama不需要API密钥
     "model": "gemma-3-27b-it",  # Ollama中的Gemma3模型名称
     "local_url": "https://aistudio.google.com/",  # Ollama默认地址
     "use_local": False,  # True使用本地Ollama部署, False使用云端API
