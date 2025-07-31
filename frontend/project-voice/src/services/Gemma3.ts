@@ -60,7 +60,7 @@ class Gemma3 {
   }
 
   /**
-   * 过滤掉句子中以输入文本开头的部分
+   * 过滤掉句子中与输入文本重复的部分
    * @param sentence 原始句子
    * @param inputText 输入文本
    * @returns 过滤后的句子
@@ -72,9 +72,36 @@ class Gemma3 {
     const cleanInput = inputText.trim();
     const cleanSentence = sentence.trim();
     
-    // 如果句子以输入文本开头，则去掉这部分
+    // 如果输入文本完全包含了句子内容，返回空字符串（没有新内容）
+    if (cleanInput.includes(cleanSentence)) {
+      console.log(`过滤句子: "${cleanSentence}" 被输入文本完全包含`);
+      return '';
+    }
+    
+    // 如果句子以输入文本开头，则去掉输入文本部分
     if (cleanSentence.startsWith(cleanInput)) {
-      return cleanSentence.substring(cleanInput.length).trim();
+      const filtered = cleanSentence.substring(cleanInput.length).trim();
+      console.log(`过滤句子: "${cleanSentence}" -> "${filtered}"`);
+      return filtered;
+    }
+    
+    // 查找公共前缀并过滤
+    let commonPrefixLength = 0;
+    const minLength = Math.min(cleanInput.length, cleanSentence.length);
+    
+    for (let i = 0; i < minLength; i++) {
+      if (cleanInput[i] === cleanSentence[i]) {
+        commonPrefixLength = i + 1;
+      } else {
+        break;
+      }
+    }
+    
+    // 如果有显著的公共前缀（超过5个字符），则去掉公共前缀
+    if (commonPrefixLength > 5) {
+      const filtered = cleanSentence.substring(commonPrefixLength).trim();
+      console.log(`过滤公共前缀: "${cleanSentence}" -> "${filtered}"`);
+      return filtered;
     }
     
     return cleanSentence;
