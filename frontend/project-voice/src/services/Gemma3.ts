@@ -40,6 +40,21 @@ class Gemma3 {
   }
 
   /**
+   * 过滤输入文本，只保留中文字符
+   * @param inputText 原始输入文本
+   * @returns 过滤后的文本（只保留中文字符）
+   */
+  private filterInputText(inputText: string): string {
+    if (!inputText) return '';
+    
+    // 使用正则表达式匹配中文字符（包括中文标点符号）
+    const chineseRegex = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/g;
+    const chineseChars = inputText.match(chineseRegex);
+    
+    return chineseChars ? chineseChars.join('') : '';
+  }
+
+  /**
    * 过滤掉句子中以输入文本开头的部分
    * @param sentence 原始句子
    * @param inputText 输入文本
@@ -85,9 +100,14 @@ class Gemma3 {
     // 过滤掉与输入文本重复的词汇
     const uniqueWords = filteredWords.filter(word => word !== text && word.trim() !== text.trim());
     
+    // 过滤输入文本，只保留中文字符
+    const filteredInputText = this.filterInputText(text);
+    console.log('原始输入文本:', text);
+    console.log('过滤后输入文本:', filteredInputText);
+    
     // 过滤掉句子中以输入文本开头的部分
     const processedSentences = filteredSentences.map(sentence => 
-      this.filterInputPrefix(sentence, text)
+      this.filterInputPrefix(sentence, filteredInputText || text)
     ).filter(sentence => sentence.trim().length > 0); // 过滤掉空句子
     
     console.log('过滤前联想句子', filteredSentences);
