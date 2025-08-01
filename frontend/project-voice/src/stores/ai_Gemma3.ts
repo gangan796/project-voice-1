@@ -245,15 +245,15 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
       return
     }
     
-    // 敏感词检测 - 如果包含敏感词，不调用API，直接显示提示
+    // 敏感词检测 - 如果包含敏感词，不调用API，直接显示空白
     if (containsSensitiveWords(text)) {
-      console.log('[AI Store] 检测到敏感词，不调用API，显示安全提示')
+      console.log('[AI Store] 检测到敏感词，不调用API，显示空白内容')
       
       // 清空辅助词
       resetAuxiliaryPages()
       
-      // 显示安全提示句子
-      suggestionSentences.value = generateSafePromptSentences()
+      // 联想句子显示为空白
+      suggestionSentences.value = []
       
       // 设置错误信息提示用户
       auxiliaryWordsError.value = '输入包含敏感内容，请修改后重试'
