@@ -75,9 +75,9 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
   // 请求限流相关状态
   let isRequestPending = false // 当前是否有请求正在进行
   let lastRequestTime = 0 // 上次请求时间
-  const MIN_REQUEST_INTERVAL = 2000 // 最小请求间隔 2秒
+  const MIN_REQUEST_INTERVAL = 5000 // 最小请求间隔 5秒（更保守）
   const requestCache = new Map<string, { data: any, timestamp: number }>() // 请求缓存
-  const CACHE_DURATION = 30000 // 缓存有效期 30秒
+  const CACHE_DURATION = 60000 // 缓存有效期 60秒（延长缓存时间）
   
   /**
    * 计算属性：是否有任何加载状态
@@ -395,7 +395,7 @@ export const useAi_Gemma3Store = defineStore('ai_Gemma3', () => {
     // 设置新的防抖定时器
     debounceTimer = window.setTimeout(() => {
       generateBothSuggestions(text)
-    }, 800) // 800ms防抖延迟
+    }, 1500) // 1.5秒防抖延迟（延长防抖时间）
   }
   
   /**

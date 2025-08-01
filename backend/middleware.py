@@ -30,9 +30,9 @@ app = Flask(__name__)
 
 # 请求限流配置
 REQUEST_RATE_LIMIT = {
-    "max_requests_per_minute": 15,  # 每分钟最多15个请求
-    "max_requests_per_second": 2,   # 每秒最多2个请求
-    "cooldown_after_429": 60        # 429错误后冷却60秒
+    "max_requests_per_minute": 8,   # 每分钟最多8个请求（更保守）
+    "max_requests_per_second": 1,   # 每秒最多1个请求（更保守）
+    "cooldown_after_429": 120       # 429错误后冷却120秒（延长冷却时间）
 }
 
 # 全局限流状态
@@ -112,8 +112,8 @@ def get_cached_response(cache_key: str) -> Optional[Dict[str, Any]]:
     with cache_lock:
         if cache_key in request_cache:
             cached_data, timestamp = request_cache[cache_key]
-            # 缓存有效期5分钟
-            if time.time() - timestamp < 300:
+            # 缓存有效期10分钟（延长缓存时间）
+            if time.time() - timestamp < 600:
                 logger.info(f"使用缓存响应: {cache_key}")
                 return cached_data
             else:
