@@ -1,2 +1,2 @@
 cd frontend\project-voice
-npm run dev
+npm run preview
