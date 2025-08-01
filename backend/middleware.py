@@ -148,8 +148,10 @@ IS_TEST_MODE = False
 # API模型配置 - Ollama Gemma3配置
 API_CONFIG = {
     "api_key": "AIzaSyACHTcUJp68ZH0MvBc8Pbp00b9cq50uPa4",  # Ollama不需要API密钥
-    "model": "gemma-3-27b-it",  # Ollama中的Gemma3模型名称
-    "local_url": "https://aistudio.google.com/",  # Ollama默认地址
+    "model": "gemma-3-27b-it",  # 云端Gemma3模型名称
+    # "model": "gemma3:12b",  # 本地Gemma3模型名称
+    "local_url": "https://aistudio.google.com/",  # 云端Gemma3模型地址
+    # "local_url": "http://localhost:11434",  # 本地Gemma3模型地址
     "use_local": False,  # True使用本地Ollama部署, False使用云端API
     "timeout": 60,  # 请求超时时间（秒）- Gemma可能需要更长时间
     "max_retries": 3  # 最大重试次数
