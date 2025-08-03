@@ -36,38 +36,38 @@ REQUEST_RATE_LIMIT = {
 }
 
 # 全局限流状态
-request_tracker = defaultdict(list)  # 每个IP的请求时间记录
+request_times = []  # 全局请求时间记录
 last_429_time = 0  # 最后一次429错误的时间
 request_cache = {}  # 请求缓存
 cache_lock = threading.Lock()  # 缓存锁
 
 def rate_limit_decorator(f):
     """
-    请求限流装饰器
+    请求限流装饰器（全局限流，不区分IP）
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        client_ip = request.remote_addr or 'unknown'
         current_time = time.time()
         
         # 检查是否在冷却期内
         global last_429_time
         if current_time - last_429_time < REQUEST_RATE_LIMIT["cooldown_after_429"]:
-            logger.warning(f"在冷却期内，拒绝请求 - IP: {client_ip}")
+            logger.warning(f"在冷却期内，拒绝请求")
             return jsonify({
                 "error": "API正在冷却中，请稍后再试",
                 "retry_after": int(REQUEST_RATE_LIMIT["cooldown_after_429"] - (current_time - last_429_time))
             }), 429
         
         # 清理过期的请求记录（超过1分钟的）
-        request_tracker[client_ip] = [
-            req_time for req_time in request_tracker[client_ip] 
+        global request_times
+        request_times = [
+            req_time for req_time in request_times 
             if current_time - req_time < 60
         ]
         
         # 检查每分钟请求数
-        if len(request_tracker[client_ip]) >= REQUEST_RATE_LIMIT["max_requests_per_minute"]:
-            logger.warning(f"每分钟请求数超限 - IP: {client_ip}, 请求数: {len(request_tracker[client_ip])}")
+        if len(request_times) >= REQUEST_RATE_LIMIT["max_requests_per_minute"]:
+            logger.warning(f"每分钟请求数超限，当前请求数: {len(request_times)}")
             return jsonify({
                 "error": "请求过于频繁，请稍后再试",
                 "retry_after": 60
@@ -75,18 +75,18 @@ def rate_limit_decorator(f):
         
         # 检查每秒请求数
         recent_requests = [
-            req_time for req_time in request_tracker[client_ip] 
+            req_time for req_time in request_times 
             if current_time - req_time < 1
         ]
         if len(recent_requests) >= REQUEST_RATE_LIMIT["max_requests_per_second"]:
-            logger.warning(f"每秒请求数超限 - IP: {client_ip}")
+            logger.warning(f"每秒请求数超限")
             return jsonify({
                 "error": "请求过于频繁，请稍后再试",
                 "retry_after": 1
             }), 429
         
         # 记录本次请求时间
-        request_tracker[client_ip].append(current_time)
+        request_times.append(current_time)
         
         try:
             return f(*args, **kwargs)

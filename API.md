@@ -1,0 +1,7 @@
+# 主域名的API
+
+AIzaSyACHTcUJp68ZH0MvBc8Pbp00b9cq50uPa4
+
+# 子域名的API
+
+AIzaSyC1FME5rgNiEfV8QrFdISy3Dp2b77cMmGE
