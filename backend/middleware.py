@@ -775,7 +775,7 @@ def call_gemini_model(text: str, input_preference: Optional[str] = None) -> Dict
     
     # 检查Gemini引擎是否在冷却期内
     current_time = time.time()
-    global gemini_429_time
+    global gemini_429_time, last_429_time
     gemini_cooldown_remaining = REQUEST_RATE_LIMIT["cooldown_after_429"] - (current_time - gemini_429_time)
     
     # 如果主引擎是Gemini且仍在冷却期，直接使用备用引擎
@@ -816,7 +816,6 @@ def call_gemini_model(text: str, input_preference: Optional[str] = None) -> Dict
             logger.warning(f"主引擎 {primary_engine} 遇到429/配额错误，立即切换到备用引擎: {e}")
             
             # 更新全局冷却时间和Gemini引擎特定冷却时间
-            global last_429_time, gemini_429_time
             last_429_time = time.time()
             
             # 如果是Gemini引擎遇到429错误，更新Gemini特定冷却时间
