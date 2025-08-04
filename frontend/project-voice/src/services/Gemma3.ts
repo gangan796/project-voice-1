@@ -25,7 +25,7 @@ class Gemma3 {
   // 创建axios实例 - 使用vite代理
   private gemma3API: AxiosInstance = axios.create({
     baseURL: '/api', // 使用vite代理
-    timeout: 15000, // 增加超时时间到15秒
+    timeout: 25000, // 增加超时时间到25秒
     headers: {
       'Content-Type': 'application/json',
     },

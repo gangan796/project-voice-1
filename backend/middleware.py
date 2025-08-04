@@ -40,6 +40,7 @@ REQUEST_RATE_LIMIT = {
 # 全局限流状态
 request_times = []  # 全局请求时间记录
 last_429_time = 0  # 最后一次429错误的时间
+gemini_429_time = 0  # Gemini引擎最后一次429错误的时间
 request_cache = {}  # 请求缓存
 cache_lock = threading.Lock()  # 缓存锁
 
@@ -771,6 +772,33 @@ def call_gemini_model(text: str, input_preference: Optional[str] = None) -> Dict
     
     # 尝试主引擎
     primary_engine = ENGINE_CONFIG["primary_engine"]
+    
+    # 检查Gemini引擎是否在冷却期内
+    current_time = time.time()
+    global gemini_429_time
+    gemini_cooldown_remaining = REQUEST_RATE_LIMIT["cooldown_after_429"] - (current_time - gemini_429_time)
+    
+    # 如果主引擎是Gemini且仍在冷却期，直接使用备用引擎
+    if (primary_engine == "gemini" and 
+        gemini_429_time > 0 and 
+        gemini_cooldown_remaining > 0 and
+        ENGINE_CONFIG["enable_fallback"]):
+        
+        fallback_engine = ENGINE_CONFIG["fallback_engine"]
+        if fallback_engine != primary_engine:
+            logger.info(f"Gemini引擎仍在冷却期（剩余{int(gemini_cooldown_remaining)}秒），直接使用备用引擎: {fallback_engine}")
+            try:
+                result = call_ai_engine(fallback_engine, contents, text)
+                if result and "words" in result and "sentences" in result:
+                    logger.info(f"备用引擎 {fallback_engine} 调用成功")
+                    return result
+                else:
+                    raise ValueError(f"备用引擎 {fallback_engine} 返回格式不正确")
+            except Exception as fallback_error:
+                logger.error(f"备用引擎 {fallback_engine} 调用失败: {fallback_error}")
+                # 如果备用引擎也失败，尝试主引擎（可能冷却期已过）
+                logger.info(f"备用引擎失败，尝试主引擎: {primary_engine}")
+    
     logger.info(f"正在使用主引擎: {primary_engine}，输入文本: {text}")
     
     try:
@@ -781,22 +809,58 @@ def call_gemini_model(text: str, input_preference: Optional[str] = None) -> Dict
         else:
             raise ValueError(f"主引擎 {primary_engine} 返回格式不正确")
     except Exception as e:
-        logger.warning(f"主引擎 {primary_engine} 调用失败: {e}")
+        error_msg = str(e).lower()
         
-        # 如果启用备用引擎，尝试备用引擎
-        if ENGINE_CONFIG["enable_fallback"]:
-            fallback_engine = ENGINE_CONFIG["fallback_engine"]
-            if fallback_engine != primary_engine:
-                logger.info(f"尝试备用引擎: {fallback_engine}")
-                try:
-                    result = call_ai_engine(fallback_engine, contents, text)
-                    if result and "words" in result and "sentences" in result:
-                        logger.info(f"备用引擎 {fallback_engine} 调用成功")
-                        return result
-                    else:
-                        raise ValueError(f"备用引擎 {fallback_engine} 返回格式不正确")
-                except Exception as fallback_error:
-                    logger.error(f"备用引擎 {fallback_engine} 也调用失败: {fallback_error}")
+        # 特别处理429错误 - 立即切换到备用引擎
+        if "429" in error_msg or "quota" in error_msg or "rate limit" in error_msg or "resource_exhausted" in error_msg:
+            logger.warning(f"主引擎 {primary_engine} 遇到429/配额错误，立即切换到备用引擎: {e}")
+            
+            # 更新全局冷却时间和Gemini引擎特定冷却时间
+            global last_429_time, gemini_429_time
+            last_429_time = time.time()
+            
+            # 如果是Gemini引擎遇到429错误，更新Gemini特定冷却时间
+            if primary_engine == "gemini":
+                gemini_429_time = time.time()
+                logger.info(f"更新Gemini引擎冷却时间，冷却期: {REQUEST_RATE_LIMIT['cooldown_after_429']}秒")
+            
+            # 如果启用备用引擎，立即尝试备用引擎
+            if ENGINE_CONFIG["enable_fallback"]:
+                fallback_engine = ENGINE_CONFIG["fallback_engine"]
+                if fallback_engine != primary_engine:
+                    logger.info(f"由于429错误，立即使用备用引擎: {fallback_engine}")
+                    try:
+                        result = call_ai_engine(fallback_engine, contents, text)
+                        if result and "words" in result and "sentences" in result:
+                            logger.info(f"备用引擎 {fallback_engine} 成功处理429错误")
+                            return result
+                        else:
+                            raise ValueError(f"备用引擎 {fallback_engine} 返回格式不正确")
+                    except Exception as fallback_error:
+                        logger.error(f"备用引擎 {fallback_engine} 也调用失败: {fallback_error}")
+                        # 抛出429错误，触发上层的429处理
+                        raise Exception(f"429_ERROR: 主引擎和备用引擎都失败，原因: {e}")
+            else:
+                # 没有启用备用引擎，直接抛出429错误
+                raise Exception(f"429_ERROR: {e}")
+        else:
+            # 非429错误，按原有逻辑处理
+            logger.warning(f"主引擎 {primary_engine} 调用失败: {e}")
+            
+            # 如果启用备用引擎，尝试备用引擎
+            if ENGINE_CONFIG["enable_fallback"]:
+                fallback_engine = ENGINE_CONFIG["fallback_engine"]
+                if fallback_engine != primary_engine:
+                    logger.info(f"尝试备用引擎: {fallback_engine}")
+                    try:
+                        result = call_ai_engine(fallback_engine, contents, text)
+                        if result and "words" in result and "sentences" in result:
+                            logger.info(f"备用引擎 {fallback_engine} 调用成功")
+                            return result
+                        else:
+                            raise ValueError(f"备用引擎 {fallback_engine} 返回格式不正确")
+                    except Exception as fallback_error:
+                        logger.error(f"备用引擎 {fallback_engine} 也调用失败: {fallback_error}")
         
         # 所有引擎都失败，抛出异常
         raise Exception(f"所有AI引擎调用失败，主引擎错误: {e}")
@@ -1205,13 +1269,31 @@ def complete_text():
     except Exception as e:
         logger.error(f"处理请求时发生错误: {e}")
         
-        # 如果是429错误，更新全局冷却时间
-        if "429" in str(e) or "quota" in str(e).lower():
+        # 增强的429错误检测和处理
+        error_msg = str(e).lower()
+        if ("429" in error_msg or 
+            "429_error" in error_msg or
+            "quota" in error_msg or 
+            "rate limit" in error_msg or
+            "resource_exhausted" in error_msg):
+            
             global last_429_time
             last_429_time = time.time()
+            
+            # 如果包含"备用引擎成功"信息，说明备用引擎已经处理了请求
+            if "备用引擎" in str(e) and "成功" in str(e):
+                # 这种情况理论上不应该到达这里，但保险起见返回提示信息
+                logger.info("主引擎429错误，但备用引擎已成功处理")
+                return jsonify({
+                    "error": "主引擎暂时不可用，已自动切换到备用引擎处理",
+                    "message": "服务正常运行中"
+                }), 200
+            
+            # 主引擎和备用引擎都失败的情况
             return jsonify({
                 "error": "API配额超限，请稍后再试",
-                "retry_after": REQUEST_RATE_LIMIT["cooldown_after_429"]
+                "retry_after": REQUEST_RATE_LIMIT["cooldown_after_429"],
+                "details": "主引擎和备用引擎都暂时不可用"
             }), 429
         
         return jsonify({"error": f"服务器内部错误: {str(e)}"}), 500
