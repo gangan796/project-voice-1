@@ -17,6 +17,8 @@ import time
 import threading
 from collections import defaultdict
 from functools import wraps
+# 新增：OpenAI兼容客户端导入
+from openai import OpenAI
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -145,7 +147,7 @@ def set_cached_response(cache_key: str, response_data: Dict[str, Any]) -> None:
 # 是否为测试模式 - True: 返回假数据, False: 调用真实API
 IS_TEST_MODE = False
 
-# API模型配置 - Ollama Gemma3配置
+# API模型配置 - Ollama Gemma3配置（原有配置保持不变）
 API_CONFIG = {
     "api_key": "AIzaSyACHTcUJp68ZH0MvBc8Pbp00b9cq50uPa4",  # Ollama不需要API密钥
     "model": "gemma-3-27b-it",  # 云端Gemma3模型名称
@@ -155,6 +157,23 @@ API_CONFIG = {
     "use_local": False,  # True使用本地Ollama部署, False使用云端API
     "timeout": 60,  # 请求超时时间（秒）- Gemma可能需要更长时间
     "max_retries": 3  # 最大重试次数
+}
+
+# 新增：OpenAI兼容引擎配置 - Cloud Run部署的Gemma模型
+OPENAI_COMPATIBLE_CONFIG = {
+    "api_key": "2w38e9rqlz9iytvb",  # Cloud Run服务的API密钥
+    "base_url": "https://gemma-3-12b-it-690935443087.europe-west1.run.app/v1",  # Cloud Run服务地址
+    "model": "gemma3:12b",  # 模型名称
+    "timeout": 60,  # 请求超时时间（秒）
+    "max_retries": 3,  # 最大重试次数
+    "enabled": True  # 是否启用此引擎
+}
+
+# 引擎选择配置
+ENGINE_CONFIG = {
+    "primary_engine": "gemini",  # 主引擎："gemini" 或 "openai_compatible"
+    "fallback_engine": "openai_compatible",  # 备用引擎：当主引擎失败时使用
+    "enable_fallback": True  # 是否启用备用引擎
 }
 
 # ================================
@@ -724,7 +743,7 @@ def get_test_data(text: str) -> Dict[str, Any]:
 
 def call_gemini_model(text: str, input_preference: Optional[str] = None) -> Dict[str, Any]:
     """
-    调用Google Gemini模型获取智能补全结果
+    调用AI模型获取智能补全结果（支持多引擎和备用引擎）
     
     Args:
         text: 用户输入的文本
@@ -734,42 +753,85 @@ def call_gemini_model(text: str, input_preference: Optional[str] = None) -> Dict
         包含words和sentences的字典
         
     Raises:
-        Exception: API调用失败时抛出异常
+        Exception: 所有引擎调用失败时抛出异常
     """
+    # 筛选相关提示词
+    additional_context = extract_relevant_prompts(text, input_preference)
+    
+    # 构建完整的提示内容
+    full_prompt = system_prompt + additional_context
+    
+    # 构建用户输入内容
+    user_content = f"用户输入：{text}"
+    if input_preference:
+        user_content += f"\n输入偏好：{input_preference}"
+    
+    # 完整的请求内容
+    contents = f"{full_prompt}\n\n{user_content}"
+    
+    # 尝试主引擎
+    primary_engine = ENGINE_CONFIG["primary_engine"]
+    logger.info(f"正在使用主引擎: {primary_engine}，输入文本: {text}")
+    
     try:
-        # 筛选相关提示词
-        additional_context = extract_relevant_prompts(text, input_preference)
-        
-        # 构建完整的提示内容
-        full_prompt = system_prompt + additional_context
-        
-        # 构建用户输入内容
-        user_content = f"用户输入：{text}"
-        if input_preference:
-            user_content += f"\n输入偏好：{input_preference}"
-        
-        # 完整的请求内容
-        contents = f"{full_prompt}\n\n{user_content}"
-        
-        logger.info(f"正在调用Gemini模型，输入文本: {text}，使用{'本地部署' if API_CONFIG['use_local'] else 'Google云端'}")
-        
-        if API_CONFIG["use_local"]:
-            # 本地化部署调用
-            result = call_local_gemini(contents)
-        else:
-            # Google云端调用
-            result = call_cloud_gemini(contents)
-        
-        # 验证返回格式
-        if "words" in result and "sentences" in result:
-            logger.info("Gemini模型调用成功")
+        result = call_ai_engine(primary_engine, contents, text)
+        if result and "words" in result and "sentences" in result:
+            logger.info(f"主引擎 {primary_engine} 调用成功")
             return result
         else:
-            raise ValueError("模型返回格式不正确，缺少必要字段")
-            
+            raise ValueError(f"主引擎 {primary_engine} 返回格式不正确")
     except Exception as e:
-        logger.error(f"Gemini模型调用失败: {e}")
-        raise Exception(f"模型调用失败: {e}")
+        logger.warning(f"主引擎 {primary_engine} 调用失败: {e}")
+        
+        # 如果启用备用引擎，尝试备用引擎
+        if ENGINE_CONFIG["enable_fallback"]:
+            fallback_engine = ENGINE_CONFIG["fallback_engine"]
+            if fallback_engine != primary_engine:
+                logger.info(f"尝试备用引擎: {fallback_engine}")
+                try:
+                    result = call_ai_engine(fallback_engine, contents, text)
+                    if result and "words" in result and "sentences" in result:
+                        logger.info(f"备用引擎 {fallback_engine} 调用成功")
+                        return result
+                    else:
+                        raise ValueError(f"备用引擎 {fallback_engine} 返回格式不正确")
+                except Exception as fallback_error:
+                    logger.error(f"备用引擎 {fallback_engine} 也调用失败: {fallback_error}")
+        
+        # 所有引擎都失败，抛出异常
+        raise Exception(f"所有AI引擎调用失败，主引擎错误: {e}")
+
+def call_ai_engine(engine_type: str, contents: str, text: str) -> Dict[str, Any]:
+    """
+    新增：根据引擎类型调用对应的AI模型
+    
+    Args:
+        engine_type: 引擎类型 ("gemini" 或 "openai_compatible")
+        contents: 完整的请求内容
+        text: 用户输入文本（用于日志）
+        
+    Returns:
+        解析后的响应数据
+        
+    Raises:
+        Exception: 引擎调用失败时抛出异常
+    """
+    if engine_type == "gemini":
+        # 调用原有的Gemini引擎
+        if API_CONFIG["use_local"]:
+            logger.info(f"使用本地Gemini部署")
+            return call_local_gemini(contents)
+        else:
+            logger.info(f"使用Google云端Gemini")
+            return call_cloud_gemini(contents)
+    
+    elif engine_type == "openai_compatible":
+        # 调用新增的OpenAI兼容引擎
+        logger.info(f"使用OpenAI兼容引擎 (Cloud Run)")
+        return call_openai_compatible_model(contents)
+    
+    else:
+        raise ValueError(f"不支持的引擎类型: {engine_type}")
 
 def call_cloud_gemini(contents: str) -> Dict[str, Any]:
     """
@@ -954,6 +1016,142 @@ def call_local_gemini(contents: str) -> Dict[str, Any]:
         logger.error(f"本地模型JSON解析失败: {e}")
         raise
 
+def call_openai_compatible_model(contents: str) -> Dict[str, Any]:
+    """
+    新增：调用OpenAI兼容的Cloud Run部署模型
+    
+    Args:
+        contents: 完整的请求内容
+        
+    Returns:
+        解析后的响应数据
+    """
+    try:
+        # 检查配置是否启用
+        if not OPENAI_COMPATIBLE_CONFIG["enabled"]:
+            raise ValueError("OpenAI兼容引擎未启用")
+        
+        # 初始化OpenAI客户端，指向Cloud Run端点
+        openai_client = OpenAI(
+            api_key=OPENAI_COMPATIBLE_CONFIG["api_key"],
+            base_url=OPENAI_COMPATIBLE_CONFIG["base_url"]
+        )
+        
+        # 构建消息格式
+        messages = [
+            {
+                "role": "developer",
+                "content": "你是一个专业的中文输入智能补全助手，专为有语言或运动障碍的用户设计。请严格按照系统提示词要求，返回JSON格式的补全结果。"
+            },
+            {
+                "role": "user",
+                "content": contents
+            }
+        ]
+        
+        logger.info(f"正在调用OpenAI兼容模型: {OPENAI_COMPATIBLE_CONFIG['model']}")
+        
+        # 调用模型生成补全
+        completion = openai_client.chat.completions.create(
+            model=OPENAI_COMPATIBLE_CONFIG["model"],
+            messages=messages,
+            temperature=0.7,
+            max_tokens=1000,
+            timeout=OPENAI_COMPATIBLE_CONFIG["timeout"]
+        )
+        
+        # 获取响应内容
+        response_text = completion.choices[0].message.content
+        
+        if not response_text:
+            logger.warning("OpenAI兼容模型返回空内容")
+            return {
+                "words": ["1. 继续", "2. 好的", "3. 明白", "4. 谢谢", "5. 需要帮助"],
+                "sentences": [
+                    "1. 请继续输入您想要表达的内容。",
+                    "2. 好的，我会尽力帮助您。",
+                    "3. 明白您的意思了。",
+                    "4. 谢谢您的耐心。",
+                    "5. 需要我提供什么帮助吗？"
+                ]
+            }
+        
+        # 清理响应文本
+        text = response_text.strip()
+        
+        # 移除可能的markdown格式标记
+        if text.startswith('```json'):
+            text = text[7:]
+        if text.endswith('```'):
+            text = text[:-3]
+        text = text.strip()
+        
+        # 移除高亮标记（星号）
+        text = text.replace('*', '')
+        
+        try:
+            # 尝试解析JSON响应
+            parsed_data = json.loads(text)
+            
+            # 验证数据结构
+            if not isinstance(parsed_data, dict):
+                raise ValueError("返回数据不是JSON对象")
+            
+            words = parsed_data.get("words", [])
+            sentences = parsed_data.get("sentences", [])
+            
+            # 标准化数据结构
+            if isinstance(words, str):
+                words = [words]
+            if isinstance(sentences, str):
+                sentences = [sentences]
+            
+            # 确保是列表并过滤空值
+            words = [str(word).strip() for word in words if word and str(word).strip()][:5]
+            sentences = [str(sentence).strip() for sentence in sentences if sentence and str(sentence).strip()][:5]
+            
+            # 填充默认值（如果为空）
+            if not words:
+                words = ["1. 继续", "2. 好的", "3. 明白", "4. 谢谢", "5. 需要帮助"]
+            if not sentences:
+                sentences = [
+                    "1. 请继续输入您想要表达的内容。",
+                    "2. 好的，我会尽力帮助您。",
+                    "3. 明白您的意思了。",
+                    "4. 谢谢您的耐心。",
+                    "5. 需要我提供什么帮助吗？"
+                ]
+            
+            logger.info("OpenAI兼容模型调用成功")
+            return {
+                "words": words,
+                "sentences": sentences
+            }
+            
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"OpenAI兼容模型JSON解析失败: {e}")
+            logger.error(f"原始返回内容: {repr(text)}")
+            
+            # JSON解析失败时的备用处理
+            lines = [line.strip() for line in text.split('\n') if line.strip()]
+            short_lines = [line for line in lines if len(line) <= 15][:5]
+            long_lines = [line for line in lines if len(line) > 15][:5]
+            
+            return {
+                "words": short_lines if short_lines else ["1. 继续", "2. 好的", "3. 明白", "4. 谢谢", "5. 需要帮助"],
+                "sentences": long_lines if long_lines else [
+                    "1. 请继续输入您想要表达的内容。",
+                    "2. 好的，我会尽力帮助您。",
+                    "3. 明白您的意思了。",
+                    "4. 谢谢您的耐心。",
+                    "5. 需要我提供什么帮助吗？"
+                ]
+            }
+        
+    except Exception as e:
+        logger.error(f"OpenAI兼容模型调用失败: {e}")
+        raise
+
 # ================================
 # 主要路由
 # ================================
@@ -1032,11 +1230,28 @@ def health_check():
 @app.route('/api/config', methods=['GET'])
 def get_config():
     """
-    获取当前配置信息
+    获取当前配置信息（包含新增的引擎配置）
     """
     return jsonify({
         "test_mode": IS_TEST_MODE,
-        "api_configured": bool(API_CONFIG["api_key"] and API_CONFIG["api_key"] != "your-api-key-here")
+        "gemini_api_configured": bool(API_CONFIG["api_key"] and API_CONFIG["api_key"] != "your-api-key-here"),
+        "openai_compatible_configured": bool(OPENAI_COMPATIBLE_CONFIG["api_key"] and OPENAI_COMPATIBLE_CONFIG["enabled"]),
+        "primary_engine": ENGINE_CONFIG["primary_engine"],
+        "fallback_engine": ENGINE_CONFIG["fallback_engine"],
+        "fallback_enabled": ENGINE_CONFIG["enable_fallback"],
+        "engines": {
+            "gemini": {
+                "use_local": API_CONFIG["use_local"],
+                "model": API_CONFIG["model"],
+                "configured": bool(API_CONFIG["api_key"] and API_CONFIG["api_key"] != "your-api-key-here")
+            },
+            "openai_compatible": {
+                "enabled": OPENAI_COMPATIBLE_CONFIG["enabled"],
+                "model": OPENAI_COMPATIBLE_CONFIG["model"],
+                "base_url": OPENAI_COMPATIBLE_CONFIG["base_url"],
+                "configured": bool(OPENAI_COMPATIBLE_CONFIG["api_key"])
+            }
+        }
     })
 
 # ================================
@@ -1057,15 +1272,26 @@ def internal_error(error):
 
 if __name__ == '__main__':
     print("="*50)
-    print("中文输入智能补全引擎中间件")
+    print("中文输入智能补全引擎中间件 (多引擎版本)")
     print("="*50)
     print(f"测试模式: {'开启' if IS_TEST_MODE else '关闭'}")
-    print(f"API配置: {'已配置' if API_CONFIG['api_key'] != 'your-api-key-here' else '未配置'}")
+    print(f"主引擎: {ENGINE_CONFIG['primary_engine']}")
+    print(f"备用引擎: {ENGINE_CONFIG['fallback_engine']} ({'启用' if ENGINE_CONFIG['enable_fallback'] else '禁用'})")
+    print("="*50)
+    print("引擎配置状态:")
+    print(f"  Gemini引擎: {'已配置' if API_CONFIG['api_key'] != 'your-api-key-here' else '未配置'} ({'本地部署' if API_CONFIG['use_local'] else 'Google云端'})")
+    print(f"  OpenAI兼容引擎: {'已配置' if OPENAI_COMPATIBLE_CONFIG['api_key'] and OPENAI_COMPATIBLE_CONFIG['enabled'] else '未配置'} (Cloud Run)")
     print("="*50)
     print("可用接口:")
     print("  POST /api/complete - 文本智能补全")
     print("  GET  /api/health  - 健康检查")
     print("  GET  /api/config  - 配置信息")
+    print("="*50)
+    print("引擎使用说明:")
+    print("  1. 系统会优先使用主引擎进行文本补全")
+    print("  2. 如果主引擎失败且启用备用引擎，会自动切换到备用引擎")
+    print("  3. 可通过修改 ENGINE_CONFIG 来调整引擎优先级")
+    print("  4. OpenAI兼容引擎使用Cloud Run部署的Gemma模型")
     print("="*50)
     
     # 启动Flask应用

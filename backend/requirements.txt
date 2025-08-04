@@ -5,3 +5,5 @@ Werkzeug==2.3.7
 google-generativeai==0.8.3
 pydantic==2.5.0
 typing-extensions>=4.5.0
+# 新增：OpenAI兼容客户端依赖
+openai>=1.0.0
