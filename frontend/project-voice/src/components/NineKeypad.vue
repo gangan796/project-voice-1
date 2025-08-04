@@ -191,7 +191,7 @@ const hideDropdown = () => {
 // 处理按键点击
 const handleKeyClick = async (value: string) => {
   console.log('Key clicked:', value)
-  // 只有删除键才直接触发事件，其他按键不默认输入
+  
   if (value === 'DELETE') {
     const currentText = appStore.text
     if (currentText.length > 0) {
@@ -205,19 +205,36 @@ const handleKeyClick = async (value: string) => {
         aiStore.tempInput -= 1
       }
     }
+  } else if (value === '0-9' || value === 'SYMBOL') {
+    // 数字和符号键直接显示下拉菜单，不做其他操作
+    // 下拉菜单选择时会直接添加到文本
+  } else {
+    // 字母键显示下拉菜单，不做其他操作
+    // 下拉菜单选择时会添加到临时输入
   }
-  // 其他按键不做任何操作，只在下拉菜单选择时才输入
 }
 
 // 处理字母点击
 const handleLetterClick = (letter: string) => {
   console.log('Letter selected:', letter)
   
-  // 添加字母到输入框
-  appStore.text = appStore.text + letter
+  // 判断是数字/标点还是字母
+  const isNumberOrSymbol = /^[0-9，。！？]$/.test(letter)
   
-  // 将字母累积到临时输入
-  aiStore.addTempChar()
+  if (isNumberOrSymbol) {
+    // 数字和中文标点直接添加到文本
+    appStore.text = appStore.text + letter
+    // 清除临时输入（如果有）
+    if (aiStore.hasTempInput) {
+      aiStore.clearTempInput()
+    }
+  } else {
+    // 字母添加到输入框
+    appStore.text = appStore.text + letter
+    
+    // 将字母累积到临时输入
+    aiStore.addTempChar()
+  }
   
   hideDropdown()
   // 判断音效

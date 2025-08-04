@@ -21,6 +21,19 @@ export default defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')
+      },
+      // 百度API代理配置
+      '/baidu-api': {
+        target: 'https://aip.baidubce.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/baidu-api/, ''),
+        secure: false
+      },
+      '/baidu-tts': {
+        target: 'https://tsn.baidu.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/baidu-tts/, ''),
+        secure: false
       }
     }
   }
