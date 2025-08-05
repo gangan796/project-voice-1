@@ -170,9 +170,12 @@ API_CONFIG = {
 
 # 新增：OpenAI兼容引擎配置 - Cloud Run部署的Gemma模型
 OPENAI_COMPATIBLE_CONFIG = {
-    "api_key": "2w38e9rqlz9iytvb",  # Cloud Run服务的API密钥
+    "api_key": "2w38e9rqlz9iytvb",  # Cloud Run服务的API密钥 - Gemma3:12B
+    # "api_key": "o93d5rowihynhh00",  # Cloud Run服务的API密钥 - Gemma3:4B
     "base_url": "https://gemma-3-12b-it-690935443087.europe-west1.run.app/v1",  # Cloud Run服务地址
+    # "base_url": "https://gemma-3n-e4b-it-690935443087.europe-west1.run.app/v1",  # Cloud Run服务地址
     "model": "gemma3:12b",  # 模型名称
+    # "model": "gemma3:4b",  # 模型名称
     "timeout": 60,  # 请求超时时间（秒）
     "max_retries": 3,  # 最大重试次数
     "enabled": True  # 是否启用此引擎
