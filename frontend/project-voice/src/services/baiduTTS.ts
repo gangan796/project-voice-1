@@ -80,6 +80,9 @@ export class BaiduTTSService {
           grant_type: 'client_credentials',
           client_id: this.config.apiKey,
           client_secret: this.config.secretKey
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
         }
       })
 
@@ -185,26 +188,40 @@ export class BaiduTTSService {
           per: params.per,
           spd: params.spd,
           pit: params.pit,
-          vol: params.vol
+          vol: params.vol,
+          aue: params.aue
         }
       });
 
+      // 使用正确的百度TTS API路径
       const response = await axiosInstance.post('/baidu-tts/text2audio', requestParams, {
         responseType: 'blob',
-        validateStatus: (status) => status < 400
+        validateStatus: (status) => status < 400,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'audio/*'
+        }
       });
 
       // 检查响应类型
-      const contentType = response.headers['content-type']
+      const contentType = response.headers['content-type'] || response.headers['Content-Type']
+      console.log('[BaiduTTS] 响应类型:', contentType)
+      
       if (contentType && contentType.includes('application/json')) {
         // 如果返回JSON，说明有错误
         const errorText = await response.data.text()
-        const errorData = JSON.parse(errorText)
-        throw new Error(`语音合成失败: ${errorData.err_msg || '未知错误'}`)
+        const errorData = JSON.parse(errorText)  
+        console.error('[BaiduTTS] API错误:', errorData)
+        throw new Error(`语音合成失败: ${errorData.err_msg || errorData.error_msg || '未知错误'}`)
       }
 
       // 获取音频数据
       const audioBlob = response.data
+      console.log('[BaiduTTS] 音频数据大小:', audioBlob.size, 'bytes')
+      
+      if (audioBlob.size === 0) {
+        throw new Error('返回的音频数据为空')
+      }
       const audioUrl = URL.createObjectURL(audioBlob)
 
       // 播放音频
@@ -228,6 +245,9 @@ export class BaiduTTSService {
     return new Promise((resolve, reject) => {
       this.currentAudio = new Audio(audioUrl)
       
+      // 设置音量（防止过小）
+      this.currentAudio.volume = 0.8
+      
       this.currentAudio.onended = () => {
         console.log('[BaiduTTS] 播放完成')
         resolve()
@@ -235,14 +255,37 @@ export class BaiduTTSService {
       
       this.currentAudio.onerror = (e) => {
         console.error('[BaiduTTS] 播放错误:', e)
+        const error = this.currentAudio?.error
+        if (error) {
+          console.error('[BaiduTTS] 详细错误信息:', {
+            code: error.code,
+            message: error.message
+          })
+        }
         reject(new Error('音频播放失败'))
       }
       
       this.currentAudio.onloadstart = () => {
-        console.log('[BaiduTTS] 开始播放')
+        console.log('[BaiduTTS] 开始加载音频')
+      }
+      
+      this.currentAudio.oncanplay = () => {
+        console.log('[BaiduTTS] 音频已加载，可以播放')
+      }
+      
+      this.currentAudio.onloadeddata = () => {
+        console.log('[BaiduTTS] 音频数据已加载')
       }
 
-      this.currentAudio.play().catch(reject)
+      // 用户交互后才能播放音频，使用 play() 方法
+      this.currentAudio.play().catch((playError) => {
+        console.error('[BaiduTTS] 播放失败:', playError)
+        // 如果是用户交互限制，提示用户点击
+        if (playError.name === 'NotAllowedError') {
+          console.warn('[BaiduTTS] 需要用户交互后才能播放音频')
+        }
+        reject(playError)
+      })
     })
   }
 

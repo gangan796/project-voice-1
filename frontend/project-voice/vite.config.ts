@@ -33,7 +33,15 @@ export default defineConfig({
         target: 'https://tsn.baidu.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/baidu-tts/, ''),
-        secure: false
+        secure: true,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('代理请求到百度TTS:', proxyReq.path)
+          })
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            console.log('百度TTS响应状态:', proxyRes.statusCode, proxyRes.headers['content-type'])
+          })
+        }
       }
     }
   }

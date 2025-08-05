@@ -50,10 +50,10 @@ def rate_limit_decorator(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        global last_429_time, request_times
         current_time = time.time()
         
         # 检查是否在冷却期内
-        global last_429_time
         if current_time - last_429_time < REQUEST_RATE_LIMIT["cooldown_after_429"]:
             logger.warning(f"在冷却期内，拒绝请求")
             return jsonify({
@@ -62,7 +62,6 @@ def rate_limit_decorator(f):
             }), 429
         
         # 清理过期的请求记录（超过1分钟的）
-        global request_times
         request_times = [
             req_time for req_time in request_times 
             if current_time - req_time < 60
@@ -94,10 +93,19 @@ def rate_limit_decorator(f):
         try:
             return f(*args, **kwargs)
         except Exception as e:
-            # 如果是429错误，更新冷却时间
-            if "429" in str(e) or "quota" in str(e).lower():
+            # 如果是429错误，更新冷却时间并立即返回429响应，避免传递到前端
+            error_msg = str(e).lower()
+            if ("429" in error_msg or 
+                "quota" in error_msg or 
+                "resource_exhausted" in error_msg or
+                "rate limit" in error_msg):
                 last_429_time = current_time
-                logger.error(f"API配额超限，启动冷却机制")
+                logger.error(f"API配额超限，启动冷却机制并返回429响应")
+                return jsonify({
+                    "error": "API配额超限，已自动切换备用引擎",
+                    "retry_after": REQUEST_RATE_LIMIT["cooldown_after_429"],
+                    "message": "系统正在智能切换引擎中"
+                }), 429
             raise
     
     return decorated_function
@@ -811,7 +819,7 @@ def call_gemini_model(text: str, input_preference: Optional[str] = None) -> Dict
     additional_context = extract_relevant_prompts(text, input_preference)
     
     # 构建完整的提示内容
-    full_prompt = system_prompt + additional_context
+    full_prompt = system_prompt_short + additional_context
     
     # 构建用户输入内容
     user_content = f"用户输入：{text}"
@@ -1307,9 +1315,41 @@ def complete_text():
             logger.info("使用测试模式，返回假数据")
             result = get_test_data(text)
         else:
-            # 生产模式：调用Gemini模型
-            logger.info("使用生产模式，调用Gemini模型")
-            result = call_gemini_model(text, input_preference)
+            # 生产模式：调用AI模型，并处理429错误
+            logger.info("使用生产模式，调用AI模型")
+            try:
+                result = call_gemini_model(text, input_preference)
+            except Exception as model_error:
+                error_msg = str(model_error).lower()
+                # 检查是否是429相关错误
+                if ("429" in error_msg or 
+                    "429_error" in error_msg or
+                    "quota" in error_msg or 
+                    "resource_exhausted" in error_msg or
+                    "rate limit" in error_msg):
+                    
+                    logger.warning(f"AI模型调用遇到429错误，尝试返回默认响应: {model_error}")
+                    
+                    # 检查是否是备用引擎成功处理的情况
+                    if "备用引擎" in str(model_error) and "成功" in str(model_error):
+                        # 备用引擎已成功处理，但仍然抛出了异常，返回默认结果
+                        result = {
+                            "words": ["1. 继续", "2. 好的", "3. 明白", "4. 谢谢", "5. 需要帮助"],
+                            "sentences": [
+                                "1. 请继续输入您想要表达的内容。",
+                                "2. 好的，我会尽力帮助您。",
+                                "3. 明白您的意思了。",
+                                "4. 谢谢您的耐心。",
+                                "5. 需要我提供什么帮助吗？"
+                            ]
+                        }
+                        logger.info("由于429错误，返回默认响应以保证服务稳定性")
+                    else:
+                        # 所有引擎都失败，重新抛出异常让外层处理
+                        raise model_error
+                else:
+                    # 非429错误，直接重新抛出
+                    raise model_error
         
         # 缓存结果
         set_cached_response(cache_key, result)

@@ -80,10 +80,10 @@ export class SpeechService {
 
       // 调用百度语音合成
       await this.baiduTTS.synthesize(text, {
-        voiceGender: options?.voiceGender,
-        rate: options?.rate,
-        pitch: options?.pitch,
-        volume: options?.volume
+        voiceGender: options?.voiceGender || 'female', // 默认女声
+        rate: options?.rate || 1.0,
+        pitch: options?.pitch || 1.0,
+        volume: options?.volume || 0.8
       })
 
       console.log('[Speech] 朗读完成')
