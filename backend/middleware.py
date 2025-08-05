@@ -32,8 +32,8 @@ app = Flask(__name__)
 
 # 请求限流配置
 REQUEST_RATE_LIMIT = {
-    "max_requests_per_minute": 8,   # 每分钟最多8个请求（更保守）
-    "max_requests_per_second": 1,   # 每秒最多1个请求（更保守）
+    "max_requests_per_minute": 20,   # 每分钟最多8个请求（更保守）
+    "max_requests_per_second": 2,   # 每秒最多1个请求（更保守）
     "cooldown_after_429": 120       # 429错误后冷却120秒（延长冷却时间）
 }
 
