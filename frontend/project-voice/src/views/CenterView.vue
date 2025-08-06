@@ -150,7 +150,7 @@ const isLastPage = computed(() => {
   width: 100%;
   max-width: calc(62.45vw - 3.25rem); /* 减去左右padding */
   /* height: 25.47rem;  修改*/
-  height:37rem;
+  height:34rem;
 }
 
 /* 输入法附加提示词区域 */
@@ -348,8 +348,9 @@ const isLastPage = computed(() => {
 
 
 .footer-section {
-  height:3rem;
+ 
   width:100%;
+
   display: flex;
   align-items: center; 
   justify-content: center;

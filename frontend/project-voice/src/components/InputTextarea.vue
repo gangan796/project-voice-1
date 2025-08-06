@@ -4,9 +4,15 @@
     <div class="textarea-wrapper">
       <textarea
         v-model="appStore.text"
-        placeholder="请输入您想写的内容"
+        placeholder="请输入您想写的内容" 
+        maxlength="60"
       >
       </textarea>
+      
+      <!-- 字符计数显示 -->
+      <div class="char-counter">
+        {{ appStore.text.length }}/60
+      </div>
       
       <!-- 底部操作栏 -->
       <div class="action-bar">
@@ -67,6 +73,7 @@ const handleHistory = () => {
 /* 文本输入区域 */
 .textarea-wrapper {
   flex: 1;
+  
   display: flex;
   flex-direction: column;
   position: relative;
@@ -79,7 +86,7 @@ textarea {
   outline: none;
   resize: none;
   font-size: 3rem;
-  line-height: 1.6;
+  line-height: 1.4;
   color: #333;
   background: transparent;
   font-family: inherit;
@@ -89,6 +96,20 @@ textarea {
 
 textarea::placeholder {
   color: #999;
+}
+
+/* 字符计数器 */
+.char-counter {
+  position: absolute;
+  bottom: 5rem; /* 在操作栏上方 */
+  right: 1rem;
+  font-size: 1.5rem;
+  color: #848484;
+  
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  
+  z-index: 10;
 }
 
 /* 底部操作栏 */
@@ -257,6 +278,14 @@ textarea::placeholder {
   
   .history-text {
     font-size: 1.5rem;
+  }
+  
+  /* 字符计数器响应式样式 */
+  .char-counter {
+    bottom: 4rem; /* 调整移动端位置 */
+    right: 0.5rem;
+    font-size: 1.2rem;
+    padding: 0.15rem 0.4rem;
   }
 }
 </style> 
