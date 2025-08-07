@@ -3,7 +3,7 @@
     <!-- 文本输入区域 -->
     <div class="textarea-wrapper">
       <textarea
-        v-model="appStore.text"
+        v-model="displayText"
         placeholder="请输入您想写的内容" 
         maxlength="60"
       >
@@ -36,8 +36,27 @@
 import clearIcon from '@/assets/icon/clear.png'
 import historyIcon from '@/assets/icon/history.png'
 import { useAppStore } from '@/stores/app'
+import { computed } from 'vue'
 
 const appStore = useAppStore()
+
+/**
+ * 计算属性：用于处理文本输入和自动截取
+ * 当文本超过60个字符时自动截取前60个字符
+ */
+const displayText = computed({
+  // 获取显示的文本
+  get: () => appStore.text,
+  // 设置文本时自动处理截取
+  set: (value: string) => {
+    // 如果文本超过60个字符，截取前60个字符
+    if (value.length > 60) {
+      appStore.text = value.substring(0, 60)
+    } else {
+      appStore.text = value
+    }
+  }
+})
 
 /**
  * 输入框组件
@@ -288,4 +307,4 @@ textarea::placeholder {
     padding: 0.15rem 0.4rem;
   }
 }
-</style> 
+</style>
