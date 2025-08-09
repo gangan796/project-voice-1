@@ -44,10 +44,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 // import { useAi_DeepSeekStore } from '@/stores/ai_DeepSeek' // DeepSeek版本（已注释）
-import { useAi_Gemma3Store } from '@/stores/ai_Gemma3' // Gemma3版本
+import { useAi_Store } from '@/stores/ai' // Gemma3版本
 
 // const aiStore = useAi_DeepSeekStore() // DeepSeek版本（已注释）
-const aiStore = useAi_Gemma3Store() // Gemma3版本
+const aiStore = useAi_Store() // Gemma3版本
 
 /**
  * 联想句子组件 - 将句子拆分为1-3字的按钮，支持连续悬浮

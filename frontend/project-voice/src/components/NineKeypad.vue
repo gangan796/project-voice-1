@@ -51,12 +51,12 @@
 import { ref } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useSettingsStore } from '@/stores/settings'
-import { useAi_Gemma3Store } from '@/stores/ai_Gemma3'
+import { useAi_Store } from '@/stores/ai'
 import aigc from '@/assets/aigei_com.mp3'
 
 const appStore = useAppStore()
 const settingsStore = useSettingsStore()
-const aiStore = useAi_Gemma3Store()
+const aiStore = useAi_Store()
 
 /**
  * 九宫格键盘组件

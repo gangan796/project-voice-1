@@ -1,1 +1,4 @@
 .trae
+backend/DeepSeek/__pycache__
+backend/DeepSeek/venv
+backend/Gemma3/venv

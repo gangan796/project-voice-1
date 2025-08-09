@@ -51,12 +51,12 @@ import { computed } from 'vue'
 import upIcon from '@/assets/icon/up.png'
 import { useAppStore } from '@/stores/app'
 // import { useAi_DeepSeekStore } from '@/stores/ai_DeepSeek' // DeepSeek版本（已注释）
-import { useAi_Gemma3Store } from '@/stores/ai_Gemma3' // Gemma3版本
+import { useAi_Store } from '@/stores/ai' // Gemma3版本
 import { useSettingsStore } from '@/stores/settings'
 
 const appStore = useAppStore()
 // const aiStore = useAi_DeepSeekStore() // DeepSeek版本（已注释）
-const aiStore = useAi_Gemma3Store() // Gemma3版本
+const aiStore = useAi_Store() // Gemma3版本
 const settingsStore = useSettingsStore()
 
 /**
