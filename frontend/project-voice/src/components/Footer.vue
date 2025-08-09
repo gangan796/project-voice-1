@@ -4,6 +4,14 @@
     <!-- 备案信息 -->
     <!-- 关于我们 -->
     <div class="footer-container">
+      <!-- 备案信息 -->
+      <!--
+        <a href="https://beian.miit.gov.cn/" 
+          target="_blank"
+          class="footer-link">
+          苏ICP备20010579号-2
+        </a>
+        &nbsp;&nbsp;&nbsp;&nbsp;-->
         <RouterLink to="/about" class="footer-link">关于我们</RouterLink>
     </div>
 </template>
