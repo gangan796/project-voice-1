@@ -17,6 +17,13 @@ class DeepSeekConfig:
     MODEL_CHAT = "deepseek-chat"
     MODEL_REASONER = "deepseek-reasoner"
 
+class KimiConfig:
+    """Kimi 配置类"""
+    API_KEY = "sk-J2YibGc04JauvyHXjIaH8HRDXW8e0WavKzknuDaaMFPemkVZ"
+    BASE_URL = "https://api.moonshot.cn/v1"
+    MODEL_CHAT = "kimi-k2-0711-preview"
+
+
 client = OpenAI(
     api_key=DeepSeekConfig.API_KEY,
     base_url=DeepSeekConfig.BASE_URL
@@ -61,8 +68,8 @@ def get_deepseek(text: str, input_preference: Optional[str] = None) -> Dict[str,
             {"role": "user", "content": user_content},
         ],
         stream=False,
-        temperature=0.7,
-        max_tokens=1000,
+        temperature=1.3,
+        max_tokens=2000, # 最大输出token数
         response_format={
             "type": "json_object"
         }

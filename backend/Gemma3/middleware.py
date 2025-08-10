@@ -682,7 +682,7 @@ def call_openai_compatible_model(contents: str) -> Dict[str, Any]:
         # 构建消息格式
         messages = [
             {
-                "role": "developer",
+                "role": "system",
                 "content": "你是一个专业的中文输入智能补全助手，专为有语言或运动障碍的用户设计。请严格按照系统提示词要求，返回JSON格式的补全结果。"
             },
             {
