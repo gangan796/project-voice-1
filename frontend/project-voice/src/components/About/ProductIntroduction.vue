@@ -55,7 +55,7 @@ h1.title {
 .image-main {
     width: 50.9375vw;
     height: 50.9259vh;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .features-right {
@@ -70,6 +70,6 @@ h1.title {
 .image-right-bottom {
     width: 25.7917vw;
     height: 24.8148vh;
-    object-fit: cover;
+    object-fit: contain;
 }
 </style>

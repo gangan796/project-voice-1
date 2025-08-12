@@ -173,11 +173,14 @@ API_CONFIG = {
 
 # 新增：OpenAI兼容引擎配置 - Cloud Run部署的Gemma模型
 OPENAI_COMPATIBLE_CONFIG = {
-    "api_key": "2w38e9rqlz9iytvb",  # Cloud Run服务的API密钥 - Gemma3:12B
+    "api_key": "sk-123456",
+    # "api_key": "2w38e9rqlz9iytvb",  # Cloud Run服务的API密钥 - Gemma3:12B
     # "api_key": "o93d5rowihynhh00",  # Cloud Run服务的API密钥 - Gemma3:4B
-    "base_url": "https://gemma-3-12b-it-690935443087.europe-west1.run.app/v1",  # Cloud Run服务地址
+    "base_url": "http://buu2.pvoice.click:8000/openai/v1",
+    # "base_url": "https://gemma-3-12b-it-690935443087.europe-west1.run.app/v1",  # Cloud Run服务地址
     # "base_url": "https://gemma-3n-e4b-it-690935443087.europe-west1.run.app/v1",  # Cloud Run服务地址
-    "model": "gemma3:12b",  # 模型名称
+    "model": "models/gemma-3-27b-it",
+    # "model": "gemma3:12b",  # 模型名称
     # "model": "gemma3:4b",  # 模型名称
     "timeout": 60,  # 请求超时时间（秒）
     "max_retries": 3,  # 最大重试次数
@@ -186,7 +189,7 @@ OPENAI_COMPATIBLE_CONFIG = {
 
 # 引擎选择配置
 ENGINE_CONFIG = {
-    "primary_engine": "gemini",  # 主引擎："gemini" 或 "openai_compatible"
+    "primary_engine": "openai_compatible",  # 主引擎："gemini" 或 "openai_compatible"
     "fallback_engine": "openai_compatible",  # 备用引擎：当主引擎失败时使用
     "enable_fallback": True  # 是否启用备用引擎
 }
@@ -681,10 +684,10 @@ def call_openai_compatible_model(contents: str) -> Dict[str, Any]:
         
         # 构建消息格式
         messages = [
-            {
-                "role": "system",
-                "content": "你是一个专业的中文输入智能补全助手，专为有语言或运动障碍的用户设计。请严格按照系统提示词要求，返回JSON格式的补全结果。"
-            },
+            #{
+            #    "role": "system",
+            #    "content": "你是一个专业的中文输入智能补全助手，专为有语言或运动障碍的用户设计。请严格按照系统提示词要求，返回JSON格式的补全结果。"
+            #},
             {
                 "role": "user",
                 "content": contents

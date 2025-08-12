@@ -33,7 +33,7 @@ const Abouts = ref(1)
 <style scoped>
 .abouts {
     width: 1920px;
-    height: 1080px;
+    height: 100%;
     margin: 0 auto;
     background-color: #ffffff;
 }
