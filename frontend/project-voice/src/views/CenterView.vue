@@ -150,7 +150,7 @@ const isLastPage = computed(() => {
   width: 100%;
   max-width: calc(62.45vw - 3.25rem); /* 减去左右padding */
   /* height: 25.47rem;  修改*/
-  height:42rem;
+  height:36rem;
 }
 
 /* 输入法附加提示词区域 */
