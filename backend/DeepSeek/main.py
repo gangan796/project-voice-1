@@ -12,14 +12,14 @@ app = FastAPI(
 
 class DeepSeekConfig:
     """DeepSeek 配置类"""
-    API_KEY = "sk-e2a0a76caab14d12998b7279dd6e6599"
+    API_KEY = "DeepSeek-API-Key"
     BASE_URL = "https://api.deepseek.com"
     MODEL_CHAT = "deepseek-chat"
     MODEL_REASONER = "deepseek-reasoner"
 
 class KimiConfig:
     """Kimi 配置类"""
-    API_KEY = "sk-J2YibGc04JauvyHXjIaH8HRDXW8e0WavKzknuDaaMFPemkVZ"
+    API_KEY = "Kimi-API-Key"
     BASE_URL = "https://api.moonshot.cn/v1"
     MODEL_CHAT = "kimi-k2-0711-preview"
 

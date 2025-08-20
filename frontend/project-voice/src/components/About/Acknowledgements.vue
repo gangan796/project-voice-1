@@ -11,7 +11,8 @@
         <div class="content-group">
           <h3 class="sub-title">个人</h3>
           <p class="name-list">
-            刘宏哲、李妍、郭娜、曲欣、崔雅梦、朱阳、刘小龙、刘湘裕
+            Lizzy Li、Kevin Chang、Jason Zhang、Lu Peng、Zhengqi Zhang、Haoyue Tong、Ruihao Huang、Fei Zou、Cindy Teng、
+            刘宏哲、李妍、郭娜、曲欣、崔雅梦、朱阳、刘小龙、刘湘裕、李婷
           </p>
         </div>
         <div class="content-group">
