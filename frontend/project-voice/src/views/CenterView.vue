@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, watch, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { SuggestionSentences, InputTextarea, Footer } from '@/components'
 import { useSettingsStore } from '@/stores/settings'
 import { useAppStore } from '@/stores/app'
