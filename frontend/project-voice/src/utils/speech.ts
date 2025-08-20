@@ -19,8 +19,9 @@ export class SpeechService {
   private initializeBaiduTTS() {
     try {
       // 直接使用API密钥，请替换为您的实际密钥
-      const apiKey = 'q3MRHRDk4DK8HJLIpVn6hxHO'
-      const secretKey = '7XEk4TXVWwCQ2zqrUAlpsYbwRxUBkwHH'
+      const apiKey = 'Baidu-API-Key'
+      const secretKey = 'Baidu-Secret-Key'
+
       /*
       if (apiKey === 'YOUR_API_KEY' || secretKey === 'YOUR_SECRET_KEY') {
         console.warn('[Speech] 百度API密钥未配置，请在代码中设置实际的API Key和Secret Key')
