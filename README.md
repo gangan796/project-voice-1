@@ -19,7 +19,7 @@ frontend/
 └── project-voice   # 前端代码
 
 ````
-
+> **注意：** mzw分支为最新版本，main分支为最初基于谷歌project voice项目做的一个基础优化，仅供参考。
 ---
 
 ## 安装与运行
